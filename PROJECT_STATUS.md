@@ -32,6 +32,7 @@ Le socle technique actuel reste pertinent. Il n'y a pas de raison de reecrire le
 - [README.md](README.md)
 - [DOCUMENTATION.md](DOCUMENTATION.md)
 - [PROJECT_STATUS.md](PROJECT_STATUS.md)
+- [ROADMAP.md](ROADMAP.md)
 - [examples/studio-compact.json](examples/studio-compact.json)
 
 ## Ce qui est en place
@@ -119,9 +120,15 @@ Les dernieres iterations ont surtout renforce la robustesse et la lecture du pat
 
 ## Roadmap
 
+La roadmap detaillee et l'audit priorise sont maintenant dans [ROADMAP.md](ROADMAP.md).
+
+Resume rapide:
+
 ### Priorite 1
 
 - faire une recette UX complete dans le navigateur
+- corriger les points de stabilite de la vue graphe
+- implementer le dark mode systeme
 - lisser les derniers details visuels et d'espacement
 - durcir encore les tests manuels autour des liaisons et des diagnostics
 - ameliorer les messages d'aide sur les actions les moins evidentes

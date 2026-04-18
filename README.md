@@ -28,6 +28,7 @@ L'application fonctionne sans backend ni compilation. Elle est pensee pour etre 
 ## Documentation
 
 - [Guide d'utilisation](DOCUMENTATION.md)
+- [Roadmap et audit](ROADMAP.md)
 - [Suivi projet et roadmap](PROJECT_STATUS.md)
 - [Exemple de schema](examples/studio-compact.json)
 - [Licence MIT](LICENSE)
@@ -68,7 +69,8 @@ Vue logique du schema pour lire plus rapidement les relations entre appareils. L
 - `app.js`: logique metier, rendu, routage, diagnostics et persistance
 - `examples/studio-compact.json`: exemple de schema chargeable
 - `DOCUMENTATION.md`: mode d'emploi
-- `PROJECT_STATUS.md`: etat du projet, historique recent et roadmap
+- `PROJECT_STATUS.md`: etat du projet et historique recent
+- `ROADMAP.md`: audit priorise et feuille de route
 
 ## Choix techniques
 
@@ -93,4 +95,4 @@ Puis ouvrir l'URL locale affichee par le terminal.
 
 Le projet est deja utilisable pour construire un patch complet, verifier les incoherences et exporter le resultat. Les prochaines etapes se concentrent surtout sur la recette navigateur, les finitions UX et la robustesse.
 
-Les details sont dans [PROJECT_STATUS.md](PROJECT_STATUS.md).
+Les details sont dans [PROJECT_STATUS.md](PROJECT_STATUS.md) et [ROADMAP.md](ROADMAP.md).
