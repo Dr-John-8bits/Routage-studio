@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Routage Studio</title>
+    <meta
+      name="description"
+      content="Outil open source pour cartographier les liaisons audio, MIDI, USB, CV, gate, trig et clock de votre setup musical."
+    >
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <div class="ambient ambient--one" aria-hidden="true"></div>
+      <div class="ambient ambient--two" aria-hidden="true"></div>
+      <div class="ambient ambient--three" aria-hidden="true"></div>
+
+      <header class="topbar panel-surface" data-help-key="overview">
+        <div class="topbar__identity">
+          <p class="eyebrow">Open source</p>
+          <h1 id="schemaTitleDisplay">Routage Studio</h1>
+          <p id="schemaDescriptionDisplay" class="headline-copy">
+            Outil open source pour cartographier les liaisons audio, MIDI, USB, CV, gate, trig et clock de votre setup musical.
+          </p>
+        </div>
+
+        <div class="topbar__status">
+          <span id="autosaveStatus" class="status-chip" data-help-key="autosave">
+            Sauvegarde locale active
+          </span>
+          <span id="selectionStatus" class="status-chip" data-help-key="selection">
+            Aucun élément sélectionné
+          </span>
+        </div>
+
+        <div class="topbar__actions">
+          <button id="newSchemaBtn" class="action-button" data-help-key="new-schema">
+            Nouveau schéma
+          </button>
+          <button id="loadSampleBtn" class="action-button" data-help-key="sample-schema">
+            Charger un exemple
+          </button>
+          <button id="exportBtn" class="action-button" data-help-key="export-json">
+            Sauvegarder JSON
+          </button>
+          <button id="importBtn" class="action-button" data-help-key="import-json">
+            Charger JSON
+          </button>
+          <button id="printBtn" class="action-button action-button--accent" data-help-key="print-schema">
+            Imprimer / PDF
+          </button>
+          <button id="shareBtn" class="action-button action-button--accent" data-help-key="share-schema">
+            Partager
+          </button>
+        </div>
+      </header>
+
+      <main class="layout">
+        <aside class="panel panel--left panel-surface">
+          <section class="panel-section" data-help-key="project-details" data-section-id="project-details">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Projet</p>
+                <h2>Informations du schéma</h2>
+              </div>
+            </div>
+
+            <label class="field">
+              <span>Titre du schéma</span>
+              <input id="schemaTitleInput" name="schemaTitle" type="text" placeholder="Mon studio live">
+            </label>
+
+            <label class="field">
+              <span>Description</span>
+              <textarea
+                id="schemaDescriptionInput"
+                name="schemaDescription"
+                rows="3"
+                placeholder="Usage, contexte, scène ou studio concerné..."
+              ></textarea>
+            </label>
+
+            <div class="toolbar-inline toolbar-inline--section">
+              <button id="resetInventoryBtn" class="action-button action-button--danger" type="button" data-help-key="reset-inventory">
+                Réinitialiser l'inventaire
+              </button>
+            </div>
+          </section>
+
+          <section class="panel-section" data-help-key="device-form" data-section-id="device-form">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Création</p>
+                <h2>Ajouter un appareil</h2>
+              </div>
+            </div>
+
+            <form id="addDeviceForm" class="stack">
+              <label class="field">
+                <span>Nom</span>
+                <input id="newDeviceName" name="deviceName" type="text" placeholder="Interface audio">
+              </label>
+
+              <div class="split">
+                <label class="field">
+                  <span>Marque / famille</span>
+                  <input id="newDeviceManufacturer" name="manufacturer" type="text" placeholder="Elektron">
+                </label>
+
+                <label class="field">
+                  <span>Couleur</span>
+                  <input id="newDeviceColor" name="color" type="color" value="#0f766e">
+                </label>
+              </div>
+
+              <label class="field">
+                <span>Type d'appareil</span>
+                <select id="newDeviceType" name="deviceType"></select>
+              </label>
+
+              <label class="field">
+                <span>Rôle ou notes</span>
+                <textarea
+                  id="newDeviceNotes"
+                  name="notes"
+                  rows="2"
+                  placeholder="Machine principale, rack CV, hub USB..."
+                ></textarea>
+              </label>
+
+              <button class="action-button action-button--full" type="submit">
+                Créer l'appareil
+              </button>
+            </form>
+          </section>
+
+          <section class="panel-section" data-help-key="device-list" data-section-id="device-list">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Inventaire</p>
+                <h2>Appareils</h2>
+              </div>
+              <span id="deviceCountBadge" class="count-badge">0</span>
+            </div>
+            <div id="deviceList" class="device-list"></div>
+          </section>
+
+          <section class="panel-section" data-help-key="device-library" data-section-id="device-library">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Réutilisation</p>
+                <h2>Bibliothèque</h2>
+              </div>
+              <div class="section-heading__tools">
+                <button
+                  id="importLibraryBtn"
+                  class="action-button action-button--soft action-button--compact"
+                  type="button"
+                  data-help-key="import-library"
+                >
+                  Charger
+                </button>
+                <button
+                  id="exportLibraryBtn"
+                  class="action-button action-button--soft action-button--compact"
+                  type="button"
+                  data-help-key="export-library"
+                >
+                  Sauvegarder
+                </button>
+              </div>
+            </div>
+            <div id="libraryList" class="device-list"></div>
+          </section>
+
+          <section class="panel-section" data-help-key="legend" data-section-id="legend">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Repères</p>
+                <h2>Couleurs des I/O</h2>
+              </div>
+            </div>
+            <div id="legendList" class="legend-list"></div>
+          </section>
+        </aside>
+
+        <section class="workspace panel-surface">
+          <div class="workspace__toolbar">
+            <div class="workspace__summary" data-help-key="board">
+              <p id="workspaceTitle" class="workspace__title">Tableau visuel</p>
+              <p id="boardHint" class="workspace__hint">
+                Pour relier deux machines, clique sur une sortie comme MIDI Out, puis sur l'entrée compatible comme MIDI In.
+              </p>
+            </div>
+
+            <div class="workspace__actions">
+              <div class="view-switch" role="group" aria-label="Choix de la vue">
+                <button id="boardViewBtn" class="action-button action-button--soft is-active" data-help-key="board" type="button">
+                  Tableau
+                </button>
+                <button id="graphViewBtn" class="action-button action-button--soft" data-help-key="graph-view" type="button">
+                  Graphe
+                </button>
+              </div>
+              <button id="undoBtn" class="action-button action-button--soft" data-help-key="undo" disabled>
+                Annuler
+              </button>
+              <button id="redoBtn" class="action-button action-button--soft" data-help-key="redo" disabled>
+                Rétablir
+              </button>
+              <button id="resetBoardBtn" class="action-button action-button--soft" data-help-key="reset-board">
+                Réinitialiser le tableau
+              </button>
+              <button id="cancelConnectBtn" class="action-button action-button--soft" data-help-key="connect-mode" disabled>
+                Annuler la liaison
+              </button>
+              <button id="centerBoardBtn" class="action-button action-button--soft" data-help-key="board">
+                Recentrer la vue
+              </button>
+            </div>
+          </div>
+
+          <div id="boardWrapper" class="board-wrapper" data-help-key="board">
+            <svg id="connectionsLayer" class="connections-layer" aria-hidden="true"></svg>
+            <div id="board" class="board"></div>
+
+            <div id="emptyState" class="empty-state">
+              <div class="empty-state__card">
+                <p class="eyebrow">Prêt à câbler</p>
+                <h2>Ajoute ton premier appareil</h2>
+                <p>
+                  Commence par créer un appareil dans la colonne de gauche. Ensuite, ajoute ses ports et relie les machines à la souris.
+                </p>
+                <button id="emptyAddDeviceBtn" class="action-button action-button--accent" data-help-key="device-form">
+                  Créer un premier appareil
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="panel panel--right panel-surface">
+          <section class="panel-section" id="inspectorPanel" data-help-key="selection">
+            <div class="placeholder-card">
+              <p class="eyebrow">Inspection</p>
+              <h2>Choisis un élément</h2>
+              <p>
+                Sélectionne un appareil, un port ou une liaison pour modifier ses détails, ajouter des ports ou ajuster le canal MIDI.
+              </p>
+            </div>
+          </section>
+
+          <section
+            class="panel-section"
+            id="diagnosticsPanel"
+            data-help-key="diagnostics"
+            data-section-id="diagnostics"
+          >
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Contrôle</p>
+                <h2>Analyse du patch</h2>
+              </div>
+            </div>
+            <div id="diagnosticsSummary" class="diagnostics-summary"></div>
+            <div id="diagnosticsList" class="diagnostics-list"></div>
+          </section>
+
+          <section class="panel-section" id="helpPanel" data-help-key="help-panel" data-section-id="help-panel">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Aide</p>
+                <h2 id="helpTitle">Guide contextuel</h2>
+              </div>
+              <button id="helpResetBtn" class="text-button" type="button">
+                Vue générale
+              </button>
+            </div>
+            <p id="helpBody" class="help-copy"></p>
+            <ul id="helpTips" class="help-list"></ul>
+          </section>
+        </aside>
+      </main>
+
+      <input id="fileInput" type="file" accept=".json,application/json" hidden>
+      <input id="libraryFileInput" type="file" accept=".json,application/json" hidden>
+
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </div>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>

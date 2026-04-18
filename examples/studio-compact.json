@@ -1,0 +1,342 @@
+{
+  "version": 1,
+  "meta": {
+    "title": "Exemple de setup live",
+    "description": "Configuration de démonstration mêlant sampler, synthé, rack modulaire, module de batterie et interface audio.",
+    "createdAt": "2026-04-18T00:00:00.000Z",
+    "updatedAt": "2026-04-18T00:00:00.000Z"
+  },
+  "devices": [
+    {
+      "id": "device-sampler",
+      "name": "Sampler",
+      "manufacturer": "Elektron",
+      "model": "Centre du live set",
+      "notes": "Machine principale pour les patterns et les samples.",
+      "color": "#0f766e",
+      "position": {
+        "x": 80,
+        "y": 110
+      },
+      "ports": [
+        {
+          "id": "sampler-audio-out-l",
+          "kind": "audio-out",
+          "name": "Main Out L",
+          "description": "",
+          "midiChannel": null
+        },
+        {
+          "id": "sampler-audio-out-r",
+          "kind": "audio-out",
+          "name": "Main Out R",
+          "description": "",
+          "midiChannel": null
+        },
+        {
+          "id": "sampler-midi-out",
+          "kind": "midi-out",
+          "name": "MIDI Out",
+          "description": "",
+          "midiChannel": "1"
+        },
+        {
+          "id": "sampler-clock-in",
+          "kind": "clock-in",
+          "name": "Clock In",
+          "description": "",
+          "midiChannel": null
+        },
+        {
+          "id": "sampler-usb",
+          "kind": "usb",
+          "name": "USB",
+          "description": "",
+          "midiChannel": null
+        }
+      ]
+    },
+    {
+      "id": "device-synth",
+      "name": "Synthé desktop",
+      "manufacturer": "ASM",
+      "model": "Voix polyphonique",
+      "notes": "Reçoit le MIDI du sampler et repart en audio mono.",
+      "color": "#2f6fd0",
+      "position": {
+        "x": 500,
+        "y": 80
+      },
+      "ports": [
+        {
+          "id": "synth-midi-in",
+          "kind": "midi-in",
+          "name": "MIDI In",
+          "description": "",
+          "midiChannel": "1"
+        },
+        {
+          "id": "synth-audio-out",
+          "kind": "audio-out",
+          "name": "Main Out",
+          "description": "",
+          "midiChannel": null
+        },
+        {
+          "id": "synth-usb",
+          "kind": "usb",
+          "name": "USB",
+          "description": "",
+          "midiChannel": null
+        }
+      ]
+    },
+    {
+      "id": "device-modular",
+      "name": "Rack modulaire",
+      "manufacturer": "Eurorack",
+      "model": "Séquence et modulation",
+      "notes": "Distribue CV, gate et horloge.",
+      "color": "#b93838",
+      "position": {
+        "x": 520,
+        "y": 380
+      },
+      "ports": [
+        {
+          "id": "mod-clock-out",
+          "kind": "clock-out",
+          "name": "Clock Out",
+          "description": "",
+          "midiChannel": null
+        },
+        {
+          "id": "mod-cv-out",
+          "kind": "cv-out",
+          "name": "Pitch CV Out",
+          "description": "",
+          "midiChannel": null
+        },
+        {
+          "id": "mod-gate-out",
+          "kind": "gate-out",
+          "name": "Gate Out",
+          "description": "",
+          "midiChannel": null
+        },
+        {
+          "id": "mod-usb",
+          "kind": "usb",
+          "name": "USB",
+          "description": "",
+          "midiChannel": null
+        }
+      ]
+    },
+    {
+      "id": "device-drum",
+      "name": "Drum module",
+      "manufacturer": "Percussions",
+      "model": "Triggers externes",
+      "notes": "Reçoit gate et clock du rack modulaire.",
+      "color": "#d97706",
+      "position": {
+        "x": 930,
+        "y": 360
+      },
+      "ports": [
+        {
+          "id": "drum-gate-in",
+          "kind": "gate-in",
+          "name": "Trig In",
+          "description": "",
+          "midiChannel": null
+        },
+        {
+          "id": "drum-clock-in",
+          "kind": "clock-in",
+          "name": "Clock In",
+          "description": "",
+          "midiChannel": null
+        },
+        {
+          "id": "drum-audio-out",
+          "kind": "audio-out",
+          "name": "Audio Out",
+          "description": "",
+          "midiChannel": null
+        }
+      ]
+    },
+    {
+      "id": "device-interface",
+      "name": "Interface audio",
+      "manufacturer": "Studio",
+      "model": "Capture et monitoring",
+      "notes": "Centralise les entrées audio et relie l'ordinateur en USB.",
+      "color": "#2a7c5a",
+      "position": {
+        "x": 960,
+        "y": 80
+      },
+      "ports": [
+        {
+          "id": "int-audio-in-1",
+          "kind": "audio-in",
+          "name": "Input 1",
+          "description": "",
+          "midiChannel": null
+        },
+        {
+          "id": "int-audio-in-2",
+          "kind": "audio-in",
+          "name": "Input 2",
+          "description": "",
+          "midiChannel": null
+        },
+        {
+          "id": "int-audio-in-3",
+          "kind": "audio-in",
+          "name": "Input 3",
+          "description": "",
+          "midiChannel": null
+        },
+        {
+          "id": "int-midi-in",
+          "kind": "midi-in",
+          "name": "MIDI In",
+          "description": "",
+          "midiChannel": "all"
+        },
+        {
+          "id": "int-midi-out",
+          "kind": "midi-out",
+          "name": "MIDI Out",
+          "description": "",
+          "midiChannel": "all"
+        },
+        {
+          "id": "int-usb",
+          "kind": "usb",
+          "name": "USB",
+          "description": "",
+          "midiChannel": null
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "connection-sampler-midi-synth",
+      "source": {
+        "deviceId": "device-sampler",
+        "portId": "sampler-midi-out"
+      },
+      "target": {
+        "deviceId": "device-synth",
+        "portId": "synth-midi-in"
+      },
+      "label": "",
+      "notes": "Pilotage principal des notes.",
+      "midiChannel": "inherit"
+    },
+    {
+      "id": "connection-sampler-audio-left",
+      "source": {
+        "deviceId": "device-sampler",
+        "portId": "sampler-audio-out-l"
+      },
+      "target": {
+        "deviceId": "device-interface",
+        "portId": "int-audio-in-1"
+      },
+      "label": "Main L",
+      "notes": "",
+      "midiChannel": null
+    },
+    {
+      "id": "connection-sampler-audio-right",
+      "source": {
+        "deviceId": "device-sampler",
+        "portId": "sampler-audio-out-r"
+      },
+      "target": {
+        "deviceId": "device-interface",
+        "portId": "int-audio-in-2"
+      },
+      "label": "Main R",
+      "notes": "",
+      "midiChannel": null
+    },
+    {
+      "id": "connection-synth-audio",
+      "source": {
+        "deviceId": "device-synth",
+        "portId": "synth-audio-out"
+      },
+      "target": {
+        "deviceId": "device-interface",
+        "portId": "int-audio-in-3"
+      },
+      "label": "",
+      "notes": "Retour du synthé desktop.",
+      "midiChannel": null
+    },
+    {
+      "id": "connection-clock",
+      "source": {
+        "deviceId": "device-modular",
+        "portId": "mod-clock-out"
+      },
+      "target": {
+        "deviceId": "device-drum",
+        "portId": "drum-clock-in"
+      },
+      "label": "",
+      "notes": "",
+      "midiChannel": null
+    },
+    {
+      "id": "connection-gate",
+      "source": {
+        "deviceId": "device-modular",
+        "portId": "mod-gate-out"
+      },
+      "target": {
+        "deviceId": "device-drum",
+        "portId": "drum-gate-in"
+      },
+      "label": "",
+      "notes": "Déclenchement du module de batterie.",
+      "midiChannel": null
+    },
+    {
+      "id": "connection-usb-sampler-interface",
+      "source": {
+        "deviceId": "device-sampler",
+        "portId": "sampler-usb"
+      },
+      "target": {
+        "deviceId": "device-interface",
+        "portId": "int-usb"
+      },
+      "label": "",
+      "notes": "Accès à l'ordinateur hôte via l'interface.",
+      "midiChannel": null
+    },
+    {
+      "id": "connection-usb-modular-interface",
+      "source": {
+        "deviceId": "device-modular",
+        "portId": "mod-usb"
+      },
+      "target": {
+        "deviceId": "device-interface",
+        "portId": "int-usb"
+      },
+      "label": "",
+      "notes": "",
+      "midiChannel": null
+    }
+  ]
+}
