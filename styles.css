@@ -1,15 +1,25 @@
 :root {
+  color-scheme: light;
   --bg: #f4eee7;
   --bg-deep: #e8dfd4;
-  --surface: rgba(255, 250, 244, 0.86);
-  --surface-strong: rgba(255, 252, 249, 0.98);
+  --surface: rgba(255, 249, 241, 0.86);
+  --surface-strong: rgba(255, 252, 248, 0.98);
+  --surface-border: rgba(255, 255, 255, 0.55);
+  --card-surface: rgba(255, 252, 249, 0.95);
+  --soft-surface: rgba(255, 255, 255, 0.88);
+  --chip-surface: rgba(255, 255, 255, 0.66);
+  --field-surface: rgba(255, 255, 255, 0.94);
   --line: rgba(30, 47, 62, 0.11);
   --ink: #1d2b34;
   --muted: #586673;
   --shadow: 0 18px 50px rgba(53, 64, 74, 0.12);
+  --panel-shadow: 0 18px 40px rgba(59, 67, 76, 0.14);
   --radius-xl: 28px;
   --radius-lg: 20px;
   --radius-md: 14px;
+  --accent-orange: #d14124;
+  --accent-sand: #f0a02f;
+  --accent-cream: #f1d6ac;
   --audio: #1f5fbf;
   --midi: #bc6318;
   --gate: #b53f3c;
@@ -18,6 +28,20 @@
   --usb: #207b85;
   --focus: #183b56;
   --problem: #c1322a;
+  --button-default: rgba(24, 59, 86, 0.08);
+  --button-soft: rgba(255, 255, 255, 0.88);
+  --button-accent-start: #17344a;
+  --button-accent-end: #295677;
+  --button-danger: rgba(203, 77, 73, 0.12);
+  --button-danger-ink: #8d231f;
+  --board-fill:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.66), rgba(255, 248, 243, 0.88)),
+    linear-gradient(90deg, rgba(24, 59, 86, 0.04) 1px, transparent 1px),
+    linear-gradient(rgba(24, 59, 86, 0.04) 1px, transparent 1px);
+  --topbar-band: linear-gradient(90deg, var(--audio), var(--accent-orange), var(--accent-sand), var(--usb));
+  --ambient-one: rgba(50, 105, 211, 0.14);
+  --ambient-two: rgba(217, 122, 40, 0.14);
+  --ambient-three: rgba(32, 123, 133, 0.15);
 }
 
 *,
@@ -83,7 +107,7 @@ select:focus-visible {
   left: -80px;
   width: 260px;
   height: 260px;
-  background: rgba(50, 105, 211, 0.14);
+  background: var(--ambient-one);
 }
 
 .ambient--two {
@@ -91,7 +115,7 @@ select:focus-visible {
   right: -110px;
   width: 340px;
   height: 340px;
-  background: rgba(217, 122, 40, 0.14);
+  background: var(--ambient-two);
 }
 
 .ambient--three {
@@ -99,12 +123,12 @@ select:focus-visible {
   left: 22%;
   width: 320px;
   height: 320px;
-  background: rgba(32, 123, 133, 0.15);
+  background: var(--ambient-three);
 }
 
 .panel-surface {
   background: var(--surface);
-  border: 1px solid rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--surface-border);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow);
   backdrop-filter: blur(18px);
@@ -124,7 +148,7 @@ select:focus-visible {
   position: absolute;
   inset: auto 0 0;
   height: 6px;
-  background: linear-gradient(90deg, var(--audio), var(--midi), var(--cv), var(--usb));
+  background: var(--topbar-band);
   opacity: 0.88;
 }
 
@@ -154,7 +178,7 @@ select:focus-visible {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   font-size: 0.72rem;
-  color: rgba(24, 59, 86, 0.72);
+  color: color-mix(in srgb, var(--focus) 72%, transparent);
 }
 
 h1,
@@ -185,10 +209,12 @@ h1 {
   min-height: 40px;
   padding: 0 14px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.66);
+  background: var(--chip-surface);
   border: 1px solid rgba(21, 48, 71, 0.08);
   color: #31414f;
   font-size: 0.93rem;
+  width: fit-content;
+  max-width: 100%;
 }
 
 .count-badge {
@@ -198,11 +224,11 @@ h1 {
 }
 
 .topbar__status .status-chip {
-  min-height: 32px;
-  padding: 6px 10px;
+  min-height: 30px;
+  padding: 5px 10px;
   gap: 6px;
   border-radius: 12px;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   line-height: 1.15;
   white-space: nowrap;
 }
@@ -281,6 +307,14 @@ h1 {
   color: #42505c;
 }
 
+.field--dense {
+  gap: 6px;
+}
+
+.field--dense span {
+  font-size: 0.82rem;
+}
+
 .field input,
 .field textarea,
 .field select {
@@ -288,7 +322,7 @@ h1 {
   padding: 12px 14px;
   border-radius: 12px;
   border-color: rgba(29, 43, 52, 0.12);
-  background: rgba(255, 255, 255, 0.94);
+  background: var(--field-surface);
   color: var(--ink);
 }
 
@@ -308,6 +342,44 @@ h1 {
   gap: 14px;
 }
 
+.filter-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1.6fr) minmax(160px, 0.9fr);
+  margin-bottom: 10px;
+}
+
+.filter-summary {
+  margin: 0 0 12px;
+  font-size: 0.83rem;
+  color: var(--muted);
+}
+
+.template-list {
+  display: grid;
+  gap: 12px;
+}
+
+.template-card {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 18px;
+  background:
+    linear-gradient(160deg, color-mix(in srgb, var(--template-tone) 12%, white), color-mix(in srgb, var(--template-tone) 3%, white));
+  border: 1px solid color-mix(in srgb, var(--template-tone) 24%, rgba(29, 43, 52, 0.08));
+}
+
+.template-card h3,
+.template-card p {
+  margin: 0;
+}
+
+.template-card p:last-of-type {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
 .action-button,
 .text-button {
   cursor: pointer;
@@ -322,7 +394,7 @@ h1 {
   min-height: 44px;
   padding: 0 16px;
   border-radius: 999px;
-  background: rgba(24, 59, 86, 0.08);
+  background: var(--button-default);
   color: #17344a;
   border-color: rgba(24, 59, 86, 0.08);
 }
@@ -340,21 +412,27 @@ h1 {
 }
 
 .action-button--accent {
-  background: linear-gradient(135deg, #17344a, #295677);
+  background: linear-gradient(135deg, var(--button-accent-start), var(--button-accent-end));
   color: #fffaf5;
 }
 
 .action-button--soft {
-  background: rgba(255, 255, 255, 0.88);
+  background: var(--button-soft);
 }
 
 .action-button--danger {
-  background: rgba(203, 77, 73, 0.12);
-  color: #8d231f;
+  background: var(--button-danger);
+  color: var(--button-danger-ink);
 }
 
 .action-button--full {
   width: 100%;
+}
+
+.action-button--compact {
+  min-height: 34px;
+  padding: 0 12px;
+  font-size: 0.84rem;
 }
 
 .text-button {
@@ -377,7 +455,7 @@ h1 {
   padding: 14px;
   border-radius: 16px;
   border: 1px solid rgba(29, 43, 52, 0.08);
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--soft-surface);
   text-align: left;
 }
 
@@ -456,7 +534,7 @@ h1 {
   gap: 12px;
   padding: 12px 14px;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.78);
+  background: color-mix(in srgb, var(--soft-surface) 90%, transparent);
   border: 1px solid rgba(29, 43, 52, 0.08);
 }
 
@@ -528,10 +606,7 @@ h1 {
   min-height: 72vh;
   overflow: auto;
   border-radius: var(--radius-lg);
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.66), rgba(255, 248, 243, 0.88)),
-    linear-gradient(90deg, rgba(24, 59, 86, 0.04) 1px, transparent 1px),
-    linear-gradient(rgba(24, 59, 86, 0.04) 1px, transparent 1px);
+  background: var(--board-fill);
   background-size:
     auto,
     28px 28px,
@@ -633,7 +708,7 @@ h1 {
 }
 
 .logic-graph__edge-label rect {
-  fill: rgba(255, 252, 249, 0.98);
+  fill: var(--card-surface);
   stroke: rgba(29, 43, 52, 0.08);
   stroke-width: 1;
 }
@@ -664,7 +739,7 @@ h1 {
 }
 
 .logic-graph__node rect {
-  fill: rgba(255, 252, 249, 0.96);
+  fill: var(--card-surface);
   stroke: rgba(29, 43, 52, 0.1);
   stroke-width: 1.2;
   box-shadow: 0 18px 40px rgba(59, 67, 76, 0.14);
@@ -739,9 +814,9 @@ h1 {
   width: 320px;
   padding: 14px;
   border-radius: 24px;
-  background: rgba(255, 252, 249, 0.95);
+  background: var(--card-surface);
   border: 1px solid rgba(29, 43, 52, 0.08);
-  box-shadow: 0 18px 40px rgba(59, 67, 76, 0.14);
+  box-shadow: var(--panel-shadow);
   transform-origin: center;
   animation: float-in 260ms ease;
 }
@@ -872,6 +947,26 @@ h1 {
   line-height: 1.42;
 }
 
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-cream) 38%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-orange) 20%, transparent);
+  color: color-mix(in srgb, var(--accent-orange) 74%, var(--ink));
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
 .device-card__ports {
   display: grid;
   gap: 10px;
@@ -903,7 +998,7 @@ h1 {
   min-height: 46px;
   padding: 10px 12px;
   border-radius: 16px;
-  background: rgba(248, 245, 241, 0.9);
+  background: color-mix(in srgb, var(--card-surface) 92%, transparent);
   border: 1px solid rgba(29, 43, 52, 0.08);
   text-align: left;
 }
@@ -993,7 +1088,7 @@ h1 {
   min-height: 44px;
   padding: 10px 12px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.84);
+  background: color-mix(in srgb, var(--soft-surface) 95%, transparent);
   border: 1px solid rgba(29, 43, 52, 0.08);
   text-align: left;
 }
@@ -1143,7 +1238,7 @@ h1 {
   padding: 14px;
   border-radius: 16px;
   border: 1px solid rgba(29, 43, 52, 0.08);
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--soft-surface);
   text-align: left;
 }
 
@@ -1226,7 +1321,7 @@ h1 {
   max-width: 440px;
   padding: 26px;
   border-radius: 24px;
-  background: rgba(255, 252, 249, 0.94);
+  background: var(--card-surface);
   border: 1px solid rgba(29, 43, 52, 0.08);
   box-shadow: 0 20px 36px rgba(58, 69, 77, 0.14);
   pointer-events: auto;
@@ -1253,6 +1348,169 @@ h1 {
 .toast.is-visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #14110f;
+    --bg-deep: #090809;
+    --surface: rgba(28, 22, 19, 0.86);
+    --surface-strong: rgba(35, 28, 24, 0.96);
+    --surface-border: rgba(255, 214, 165, 0.08);
+    --card-surface: rgba(31, 25, 22, 0.96);
+    --soft-surface: rgba(38, 31, 27, 0.94);
+    --chip-surface: rgba(45, 36, 31, 0.92);
+    --field-surface: rgba(22, 18, 16, 0.96);
+    --line: rgba(255, 230, 207, 0.12);
+    --ink: #f5ece1;
+    --muted: #c9b6a3;
+    --shadow: 0 22px 52px rgba(0, 0, 0, 0.38);
+    --panel-shadow: 0 20px 44px rgba(0, 0, 0, 0.34);
+    --button-default: rgba(255, 214, 165, 0.08);
+    --button-soft: rgba(46, 38, 33, 0.96);
+    --button-accent-start: #6e2014;
+    --button-accent-end: #b84722;
+    --button-danger: rgba(209, 65, 36, 0.18);
+    --button-danger-ink: #ffb2a0;
+    --board-fill:
+      linear-gradient(135deg, rgba(41, 32, 28, 0.9), rgba(23, 18, 16, 0.96)),
+      linear-gradient(90deg, rgba(241, 214, 172, 0.06) 1px, transparent 1px),
+      linear-gradient(rgba(241, 214, 172, 0.06) 1px, transparent 1px);
+    --topbar-band: linear-gradient(90deg, #3567c8, #d14124, #f0a02f, #1f8c97);
+    --ambient-one: rgba(53, 103, 200, 0.18);
+    --ambient-two: rgba(209, 65, 36, 0.16);
+    --ambient-three: rgba(31, 140, 151, 0.14);
+  }
+
+  body {
+    background:
+      radial-gradient(circle at top left, rgba(255, 214, 165, 0.08), transparent 32%),
+      linear-gradient(160deg, #1c1512 0%, #130f0e 52%, #0b0a0b 100%);
+  }
+
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    border-color: rgba(240, 160, 47, 0.55);
+    box-shadow: 0 0 0 4px rgba(240, 160, 47, 0.16);
+  }
+
+  .status-chip,
+  .count-badge,
+  .action-button,
+  .action-button--soft,
+  .panel-section,
+  .device-list__item,
+  .legend-chip,
+  .mini-action,
+  .diagnostic-item,
+  .empty-state__card,
+  .view-switch,
+  .logic-graph__edge-label rect,
+  .connection-badge rect {
+    border-color: rgba(255, 214, 165, 0.1);
+  }
+
+  .device-type-icon {
+    background: color-mix(in srgb, var(--device-type-color) 16%, rgba(255, 255, 255, 0.02));
+    border-color: color-mix(in srgb, var(--device-type-color) 30%, rgba(255, 214, 165, 0.12));
+  }
+
+  .status-chip,
+  .count-badge {
+    color: #f1e4d5;
+  }
+
+  .field span,
+  .workspace__title,
+  .help-list,
+  .shortcut-list,
+  .port-chip__compact-symbol,
+  .logic-graph__node-meta {
+    color: var(--muted);
+  }
+
+  .section-chevron {
+    background: rgba(255, 214, 165, 0.08);
+    border-color: rgba(255, 214, 165, 0.12);
+    color: #f5d5aa;
+  }
+
+  .action-button {
+    color: #f6eadc;
+  }
+
+  .field input,
+  .field textarea,
+  .field select {
+    border-color: rgba(255, 214, 165, 0.1);
+  }
+
+  .action-button.is-active {
+    background: rgba(240, 160, 47, 0.18);
+    border-color: rgba(240, 160, 47, 0.24);
+    color: #fff1e0;
+    box-shadow: inset 0 0 0 1px rgba(240, 160, 47, 0.12);
+  }
+
+  .text-button {
+    color: #f0c58d;
+  }
+
+  .device-list__item.is-selected,
+  .mini-action.is-selected {
+    border-color: rgba(240, 160, 47, 0.28);
+    box-shadow: inset 0 0 0 1px rgba(240, 160, 47, 0.12);
+  }
+
+  .route-summary,
+  .diagnostic-stat {
+    background: rgba(240, 160, 47, 0.08);
+    border-color: rgba(240, 160, 47, 0.12);
+  }
+
+  .template-card {
+    background:
+      linear-gradient(
+        160deg,
+        color-mix(in srgb, var(--template-tone) 18%, rgba(32, 25, 21, 0.98)),
+        rgba(32, 25, 21, 0.98)
+      );
+    border-color: color-mix(in srgb, var(--template-tone) 34%, rgba(255, 214, 165, 0.08));
+  }
+
+  .logic-graph__edge-path {
+    stroke: rgba(201, 182, 163, 0.72);
+  }
+
+  .logic-graph__node-icon-frame {
+    fill: rgba(255, 214, 165, 0.08);
+    stroke: rgba(255, 214, 165, 0.12);
+  }
+
+  .connection-badge rect {
+    fill: rgba(31, 25, 22, 0.98);
+  }
+
+  .device-card__alert,
+  .problem-banner,
+  .diagnostic-stat--bad,
+  .diagnostic-item--bad,
+  .connection-badge--problem rect,
+  .logic-graph__edge-label.is-problem rect {
+    border-color: rgba(209, 65, 36, 0.28);
+  }
+
+  .inspector-card + .inspector-card {
+    border-top-color: rgba(255, 214, 165, 0.08);
+  }
+
+  .toast {
+    background: rgba(10, 9, 10, 0.94);
+    color: #fff2e2;
+  }
 }
 
 @keyframes float-in {
@@ -1292,6 +1550,10 @@ h1 {
 @media (max-width: 980px) {
   .app-shell {
     padding: 16px;
+  }
+
+  .filter-grid {
+    grid-template-columns: 1fr;
   }
 
   .topbar,

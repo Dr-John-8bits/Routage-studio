@@ -1,6 +1,8 @@
 const APP_NAME = "Routage Studio";
 const DEFAULT_SCHEMA_DESCRIPTION =
   "Outil open source pour cartographier les liaisons audio, MIDI, USB, CV, gate, trig et clock de votre setup musical.";
+const SCHEMA_TYPE = "routage-studio-schema";
+const LIBRARY_EXPORT_TYPE = "routage-studio-library";
 const LEGACY_DEFAULT_TITLES = new Set(["Table de routage"]);
 const LEGACY_DEFAULT_DESCRIPTIONS = new Set([
   "Table de routage est une webapp open source permettant de créer, visualiser, sauvegarder et charger des schémas de routing audio, MIDI, USB, CV, gate, trig et clock entre des appareils.",
@@ -8,8 +10,8 @@ const LEGACY_DEFAULT_DESCRIPTIONS = new Set([
 ]);
 const STORAGE_KEY = "patchbay-studio.schema.v1";
 const LIBRARY_STORAGE_KEY = "patchbay-studio.library.v1";
-const SCHEMA_VERSION = 1;
-const LIBRARY_VERSION = 1;
+const SCHEMA_VERSION = 2;
+const LIBRARY_VERSION = 2;
 const DEVICE_ACCENTS = ["#0f766e", "#d97706", "#2f6fd0", "#b45309", "#b93838", "#2a7c5a"];
 const DEVICE_TYPE_OPTIONS = [
   {
@@ -105,6 +107,32 @@ const DEVICE_TYPE_OPTIONS = [
 ];
 const DEVICE_TYPE_LIBRARY = Object.fromEntries(
   DEVICE_TYPE_OPTIONS.map((entry) => [entry.value, entry])
+);
+const SETUP_TEMPLATES = [
+  {
+    id: "live-compact",
+    label: "Live compact",
+    eyebrow: "Recommandé",
+    description: "Sampler, synthé, modulaire et interface audio prêts à câbler.",
+    tone: "#d97706"
+  },
+  {
+    id: "hybrid-studio",
+    label: "Studio hybride",
+    eyebrow: "Studio",
+    description: "Ordinateur, table de mixage, interface, monitoring et instruments externes.",
+    tone: "#d14124"
+  },
+  {
+    id: "modular-clock-lab",
+    label: "Lab modulaire",
+    eyebrow: "Clock / CV",
+    description: "Séquenceur, rack Eurorack, boîte à rythme et synthé synchronisés.",
+    tone: "#f0a02f"
+  }
+];
+const TEMPLATE_LIBRARY = Object.fromEntries(
+  SETUP_TEMPLATES.map((template) => [template.id, template])
 );
 
 const PORT_LIBRARY = {
@@ -273,10 +301,11 @@ const HELP_CONTENT = {
   "sample-schema": {
     title: "Schéma exemple",
     body:
-      "Charge un setup de démonstration pour voir rapidement comment organiser des appareils, des ports et des liaisons de plusieurs types.",
+      "Charge un setup de démonstration prêt à l'emploi pour voir rapidement comment organiser des appareils, des ports et des liaisons de plusieurs types.",
     tips: [
       "Tu peux ensuite modifier librement l'exemple et l'enregistrer sous ton propre nom.",
-      "C'est pratique pour découvrir la logique des couleurs et du câblage."
+      "C'est pratique pour découvrir la logique des couleurs et du câblage.",
+      "La section Gabarits à gauche permet ensuite de charger d'autres points de départ."
     ]
   },
   "reset-board": {
@@ -349,7 +378,17 @@ const HELP_CONTENT = {
     tips: [
       "Une couleur d'accent aide à repérer visuellement des familles de machines.",
       "Le type d'appareil choisit aussi une icone de repere dans l'inventaire, le tableau et le graphe.",
+      "Les tags servent ensuite pour filtrer rapidement l'inventaire et la bibliothèque.",
       "Les ports sont ajoutés après création dans le panneau d'édition."
+    ]
+  },
+  "setup-templates": {
+    title: "Gabarits de setup",
+    body:
+      "Ces gabarits chargent des projets de départ prêts à adapter. Ils servent à gagner du temps quand tu veux partir d'une configuration live, studio ou modulaire déjà structurée.",
+    tips: [
+      "Le gabarit remplace le schéma courant après confirmation.",
+      "Tu peux ensuite renommer, déplacer ou supprimer librement les appareils chargés."
     ]
   },
   "device-list": {
@@ -359,6 +398,15 @@ const HELP_CONTENT = {
     tips: [
       "Le compteur affiche le nombre total d'appareils.",
       "Chaque ligne indique aussi le nombre de ports et de liaisons liées à l'appareil."
+    ]
+  },
+  "inventory-filters": {
+    title: "Filtres d'inventaire",
+    body:
+      "La recherche et le filtre de type servent à retrouver vite un appareil dans les setups chargés, même quand la liste devient longue.",
+    tips: [
+      "La recherche regarde le nom, la marque, le modèle, les tags, les notes et les noms de ports.",
+      "Le filtre de type permet par exemple d'isoler seulement les synthés ou les interfaces."
     ]
   },
   "device-library": {
@@ -378,6 +426,15 @@ const HELP_CONTENT = {
     tips: [
       "Pratique pour archiver tes instruments ou les transférer vers un autre navigateur.",
       "L'export de bibliothèque complète l'export du schéma, il ne le remplace pas."
+    ]
+  },
+  "library-filters": {
+    title: "Filtres de bibliothèque",
+    body:
+      "Comme pour l'inventaire, ces filtres servent à retrouver plus rapidement un instrument enregistré dans la bibliothèque locale.",
+    tips: [
+      "Les tags sont particulièrement utiles pour regrouper les modèles par usage: live, studio, master clock, voix, etc.",
+      "Le filtre de type te permet d'afficher seulement une famille d'instruments."
     ]
   },
   "import-library": {
@@ -543,10 +600,18 @@ const elements = {
   newDeviceName: document.querySelector("#newDeviceName"),
   newDeviceManufacturer: document.querySelector("#newDeviceManufacturer"),
   newDeviceType: document.querySelector("#newDeviceType"),
+  newDeviceTags: document.querySelector("#newDeviceTags"),
   newDeviceColor: document.querySelector("#newDeviceColor"),
   newDeviceNotes: document.querySelector("#newDeviceNotes"),
+  templateList: document.querySelector("#templateList"),
   deviceCountBadge: document.querySelector("#deviceCountBadge"),
+  deviceSearchInput: document.querySelector("#deviceSearchInput"),
+  deviceTypeFilter: document.querySelector("#deviceTypeFilter"),
+  deviceFilterSummary: document.querySelector("#deviceFilterSummary"),
   deviceList: document.querySelector("#deviceList"),
+  librarySearchInput: document.querySelector("#librarySearchInput"),
+  libraryTypeFilter: document.querySelector("#libraryTypeFilter"),
+  libraryFilterSummary: document.querySelector("#libraryFilterSummary"),
   libraryList: document.querySelector("#libraryList"),
   legendList: document.querySelector("#legendList"),
   boardWrapper: document.querySelector("#boardWrapper"),
@@ -589,6 +654,12 @@ const state = {
   helpKey: "overview",
   drag: null,
   collapsedSections: new Set(),
+  filters: {
+    inventoryQuery: "",
+    inventoryType: "all",
+    libraryQuery: "",
+    libraryType: "all"
+  },
   diagnostics: {
     items: [],
     errors: 0,
@@ -632,19 +703,21 @@ function hydrateStaticFields() {
     elements.newDeviceType.innerHTML = renderDeviceTypeOptionsMarkup("other");
     elements.newDeviceType.value = "other";
   }
+  if (elements.deviceTypeFilter) {
+    elements.deviceTypeFilter.innerHTML = renderDeviceTypeFilterOptionsMarkup("all");
+    elements.deviceTypeFilter.value = "all";
+  }
+  if (elements.libraryTypeFilter) {
+    elements.libraryTypeFilter.innerHTML = renderDeviceTypeFilterOptionsMarkup("all");
+    elements.libraryTypeFilter.value = "all";
+  }
+  renderTemplateList();
 }
 
 function attachEvents() {
   elements.newSchemaBtn.addEventListener("click", handleNewSchema);
   elements.loadSampleBtn.addEventListener("click", () => {
-    recordHistory();
-    state.schema = createSampleSchema();
-    state.selectedDeviceId = null;
-    state.selectedPortId = null;
-    state.selectedConnectionId = null;
-    cancelConnectionMode({ announce: false });
-    persistSchema("Exemple chargé.");
-    centerBoard(false);
+    loadSetupTemplate("live-compact");
   });
   elements.exportBtn.addEventListener("click", exportSchema);
   elements.importBtn.addEventListener("click", () => {
@@ -672,10 +745,15 @@ function attachEvents() {
     renderHelp();
   });
   elements.addDeviceForm.addEventListener("submit", handleAddDevice);
+  elements.templateList.addEventListener("click", handleTemplateListClick);
   elements.fileInput.addEventListener("change", handleImportFile);
   elements.libraryFileInput.addEventListener("change", handleLibraryImportFile);
   elements.schemaTitleInput.addEventListener("change", handleProjectMetaChange);
   elements.schemaDescriptionInput.addEventListener("change", handleProjectMetaChange);
+  elements.deviceSearchInput.addEventListener("input", handleFilterInput);
+  elements.deviceTypeFilter.addEventListener("change", handleFilterInput);
+  elements.librarySearchInput.addEventListener("input", handleFilterInput);
+  elements.libraryTypeFilter.addEventListener("change", handleFilterInput);
   elements.cancelConnectBtn.addEventListener("click", () => cancelConnectionMode());
   elements.centerBoardBtn.addEventListener("click", () => centerBoard());
   elements.boardViewBtn.addEventListener("click", () => setWorkspaceView("board"));
@@ -730,6 +808,33 @@ function handleNewSchema() {
   persistSchema("Nouveau schéma prêt.");
 }
 
+function loadSetupTemplate(templateId) {
+  const template = TEMPLATE_LIBRARY[templateId];
+  if (!template) {
+    return;
+  }
+
+  const hasCurrentContent = state.schema.devices.length || state.schema.connections.length;
+  if (hasCurrentContent) {
+    const confirmed = window.confirm(
+      `Charger le gabarit "${template.label}" remplacera le schéma courant. Continuer ?`
+    );
+    if (!confirmed) {
+      return;
+    }
+  }
+
+  recordHistory();
+  state.schema = createTemplateSchema(templateId);
+  state.selectedDeviceId = null;
+  state.selectedPortId = null;
+  state.selectedConnectionId = null;
+  cancelConnectionMode({ announce: false });
+  state.helpKey = "setup-templates";
+  persistSchema(`Gabarit "${template.label}" chargé.`);
+  centerBoard(false);
+}
+
 function handleProjectMetaChange(event) {
   recordHistory();
   const field = event.target.id;
@@ -760,6 +865,7 @@ function handleAddDevice(event) {
     type: normalizeDeviceType(elements.newDeviceType.value),
     manufacturer: elements.newDeviceManufacturer.value.trim(),
     model: "",
+    tags: parseTagsInput(elements.newDeviceTags.value),
     notes: elements.newDeviceNotes.value.trim(),
     color: nextColor,
     position: getNextDevicePosition(),
@@ -849,6 +955,38 @@ async function handleLibraryImportFile(event) {
   } finally {
     event.target.value = "";
   }
+}
+
+function handleFilterInput(event) {
+  const target = event.target;
+  if (target === elements.deviceSearchInput) {
+    state.filters.inventoryQuery = target.value;
+    renderDeviceList();
+    return;
+  }
+  if (target === elements.deviceTypeFilter) {
+    state.filters.inventoryType = target.value;
+    renderDeviceList();
+    return;
+  }
+  if (target === elements.librarySearchInput) {
+    state.filters.libraryQuery = target.value;
+    renderLibrary();
+    return;
+  }
+  if (target === elements.libraryTypeFilter) {
+    state.filters.libraryType = target.value;
+    renderLibrary();
+  }
+}
+
+function handleTemplateListClick(event) {
+  const button = event.target.closest("[data-action='load-template']");
+  if (!button) {
+    return;
+  }
+
+  loadSetupTemplate(button.dataset.templateId);
 }
 
 function handleBoardClick(event) {
@@ -1628,6 +1766,8 @@ function updateSelectedDeviceField(field, value) {
     device.color = normalizeColor(value, device.color);
   } else if (field === "type") {
     device.type = normalizeDeviceType(value);
+  } else if (field === "tags") {
+    device.tags = parseTagsInput(value);
   } else {
     device[field] = value.trim();
   }
@@ -1745,6 +1885,7 @@ function render() {
   state.diagnostics = getDiagnosticsReport();
   updateBoardSize();
   renderProjectMeta();
+  renderTemplateList();
   renderDeviceList();
   renderLibrary();
   renderBoard();
@@ -1815,7 +1956,105 @@ function renderStatus() {
   }
 }
 
+function renderTemplateList() {
+  if (!elements.templateList) {
+    return;
+  }
+
+  elements.templateList.innerHTML = SETUP_TEMPLATES.map(
+    (template) => `
+      <article class="template-card" style="--template-tone:${escapeAttr(template.tone)}" data-help-key="setup-templates">
+        <p class="eyebrow">${escapeHtml(template.eyebrow)}</p>
+        <h3>${escapeHtml(template.label)}</h3>
+        <p>${escapeHtml(template.description)}</p>
+        <button
+          class="action-button action-button--soft"
+          type="button"
+          data-action="load-template"
+          data-template-id="${template.id}"
+        >
+          Charger ce gabarit
+        </button>
+      </article>
+    `
+  ).join("");
+}
+
+function getFilteredDevices() {
+  return state.schema.devices.filter((device) =>
+    matchesDeviceFilters(device, state.filters.inventoryQuery, state.filters.inventoryType)
+  );
+}
+
+function getFilteredLibraryEntries() {
+  return state.deviceLibrary.filter((entry) =>
+    matchesDeviceFilters(entry, state.filters.libraryQuery, state.filters.libraryType)
+  );
+}
+
+function matchesDeviceFilters(entry, query, typeFilter) {
+  const normalizedType = typeFilter || "all";
+  if (normalizedType !== "all" && normalizeDeviceType(entry.type) !== normalizedType) {
+    return false;
+  }
+
+  const normalizedQuery = normalizeSearchQuery(query);
+  if (!normalizedQuery) {
+    return true;
+  }
+
+  return buildDeviceSearchText(entry).includes(normalizedQuery);
+}
+
+function buildDeviceSearchText(entry) {
+  return normalizeSearchQuery([
+    entry?.name,
+    getDeviceTypeLabel(entry?.type),
+    entry?.manufacturer,
+    entry?.model,
+    entry?.notes,
+    ...(Array.isArray(entry?.tags) ? entry.tags : []),
+    ...(Array.isArray(entry?.ports)
+      ? entry.ports.flatMap((port) => [port.name, port.description, PORT_LIBRARY[port.kind]?.label])
+      : [])
+  ].filter(Boolean).join(" "));
+}
+
+function normalizeSearchQuery(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function renderFilterSummary(element, visibleCount, totalCount, emptyLabel) {
+  if (!element) {
+    return;
+  }
+
+  if (totalCount === 0) {
+    element.textContent = emptyLabel;
+    return;
+  }
+
+  if (visibleCount === totalCount) {
+    element.textContent = `${totalCount} élément${totalCount > 1 ? "s" : ""} affiché${totalCount > 1 ? "s" : ""}.`;
+    return;
+  }
+
+  element.textContent = `${visibleCount} résultat${visibleCount > 1 ? "s" : ""} sur ${totalCount}.`;
+}
+
 function renderDeviceList() {
+  const devices = getFilteredDevices();
+  renderFilterSummary(
+    elements.deviceFilterSummary,
+    devices.length,
+    state.schema.devices.length,
+    "Aucun appareil dans le schéma."
+  );
+
   if (!state.schema.devices.length) {
     elements.deviceList.innerHTML = `
       <div class="placeholder-card">
@@ -1825,7 +2064,16 @@ function renderDeviceList() {
     return;
   }
 
-  elements.deviceList.innerHTML = state.schema.devices
+  if (!devices.length) {
+    elements.deviceList.innerHTML = `
+      <div class="placeholder-card">
+        <p class="inspector-copy">Aucun appareil ne correspond aux filtres actuels.</p>
+      </div>
+    `;
+    return;
+  }
+
+  elements.deviceList.innerHTML = devices
     .map((device) => {
       const connectionCount = state.schema.connections.filter(
         (connection) =>
@@ -1833,6 +2081,15 @@ function renderDeviceList() {
       ).length;
       const isSelected = device.id === state.selectedDeviceId;
       const issueCount = getDeviceDiagnosticCount(device.id);
+      const subtitle = [
+        getDeviceTypeLabel(device.type),
+        device.manufacturer,
+        device.tags?.length ? `#${device.tags.slice(0, 2).join(" #")}` : "",
+        `${device.ports.length} ports`,
+        `${connectionCount} liaisons${issueCount ? ` · ${issueCount} alerte${issueCount > 1 ? "s" : ""}` : ""}`
+      ]
+        .filter(Boolean)
+        .join(" · ");
 
       return `
         <button
@@ -1847,7 +2104,7 @@ function renderDeviceList() {
           })}
           <span class="device-list__copy">
             <strong>${escapeHtml(device.name)}</strong>
-            <span>${escapeHtml(getDeviceTypeLabel(device.type))} · ${device.ports.length} ports · ${connectionCount} liaisons${issueCount ? ` · ${issueCount} alerte${issueCount > 1 ? "s" : ""}` : ""}</span>
+            <span>${escapeHtml(subtitle)}</span>
           </span>
         </button>
       `;
@@ -1856,6 +2113,14 @@ function renderDeviceList() {
 }
 
 function renderLibrary() {
+  const entries = getFilteredLibraryEntries();
+  renderFilterSummary(
+    elements.libraryFilterSummary,
+    entries.length,
+    state.deviceLibrary.length,
+    "Bibliothèque vide."
+  );
+
   if (!state.deviceLibrary.length) {
     elements.libraryList.innerHTML = `
       <div class="placeholder-card">
@@ -1865,9 +2130,26 @@ function renderLibrary() {
     return;
   }
 
-  elements.libraryList.innerHTML = state.deviceLibrary
+  if (!entries.length) {
+    elements.libraryList.innerHTML = `
+      <div class="placeholder-card">
+        <p class="inspector-copy">Aucun instrument de bibliothèque ne correspond aux filtres actuels.</p>
+      </div>
+    `;
+    return;
+  }
+
+  elements.libraryList.innerHTML = entries
     .map((entry) => {
-      const subtitle = [entry.manufacturer, entry.model].filter(Boolean).join(" · ");
+      const subtitle = [
+        getDeviceTypeLabel(entry.type),
+        entry.manufacturer,
+        entry.model,
+        entry.tags?.length ? `#${entry.tags.slice(0, 2).join(" #")}` : "",
+        `${entry.ports.length} ports`
+      ]
+        .filter(Boolean)
+        .join(" · ");
       return `
         <div class="device-list__item" data-help-key="device-library">
           ${renderDeviceTypeIcon(entry.type, entry.color, {
@@ -1875,7 +2157,7 @@ function renderLibrary() {
           })}
           <span class="device-list__copy">
             <strong>${escapeHtml(entry.name)}</strong>
-            <span>${escapeHtml(getDeviceTypeLabel(entry.type))} · ${escapeHtml(subtitle || "Modèle réutilisable")} · ${entry.ports.length} ports</span>
+            <span>${escapeHtml(subtitle || "Modèle réutilisable")}</span>
           </span>
           <div class="toolbar-inline">
             <button
@@ -1908,12 +2190,9 @@ function saveDeviceToLibrary(deviceId) {
   }
 
   const entry = createLibraryEntryFromDevice(device);
+  const entryIdentity = getLibraryEntryIdentity(entry);
   const existingIndex = state.deviceLibrary.findIndex(
-    (item) =>
-      item.name === entry.name &&
-      item.type === entry.type &&
-      item.manufacturer === entry.manufacturer &&
-      item.model === entry.model
+    (item) => getLibraryEntryIdentity(item) === entryIdentity
   );
 
   if (existingIndex >= 0) {
@@ -1947,6 +2226,7 @@ function instantiateLibraryDevice(libraryId) {
     type: entry.type,
     manufacturer: entry.manufacturer,
     model: entry.model,
+    tags: normalizeTags(entry.tags),
     notes: entry.notes,
     color: entry.color,
     position: getNextDevicePosition(),
@@ -2084,6 +2364,7 @@ function renderBoard() {
                   <div class="device-card__center">
                     <span class="device-card__meta">${device.ports.length} ports</span>
                     <p class="device-card__notes">${escapeHtml(device.notes || "Ajoute des notes pour décrire le rôle de l'appareil.")}</p>
+                    ${renderTagChips(device.tags)}
                   </div>
                 `
             }
@@ -2332,6 +2613,10 @@ function renderLogicGraph() {
         classes.push(isHighlighted ? "is-highlighted" : "is-dimmed");
       }
 
+      const titleLabel = truncateText(node.name, 22);
+      const subtitleLabel = truncateText(node.subtitle, 28);
+      const metaLabel = truncateText(`${node.portCount} ports`, 24);
+
       return `
         <g
           class="${classes.join(" ")}"
@@ -2343,9 +2628,9 @@ function renderLogicGraph() {
           <title>${escapeAttr(node.name)}</title>
           <rect width="${node.width}" height="${node.height}" rx="20"></rect>
           ${renderDeviceTypeGraphIcon(node.type, node.color, 18, 16)}
-          <text class="logic-graph__node-title" x="58" y="31">${escapeHtml(node.name)}</text>
-          <text class="logic-graph__node-sub" x="58" y="51">${escapeHtml(node.subtitle)}</text>
-          <text class="logic-graph__node-meta" x="58" y="73">${escapeHtml(`${node.portCount} ports`)}</text>
+          <text class="logic-graph__node-title" x="58" y="31">${escapeHtml(titleLabel)}</text>
+          <text class="logic-graph__node-sub" x="58" y="51">${escapeHtml(subtitleLabel)}</text>
+          <text class="logic-graph__node-meta" x="58" y="73">${escapeHtml(metaLabel)}</text>
           ${
             issueCount
               ? `
@@ -2426,6 +2711,16 @@ function renderDeviceInspector(device) {
         <strong>${device.ports.length} ports</strong>
         <span>${countDeviceConnections(device.id)} liaisons liées à cet appareil.</span>
       </div>
+
+      <label class="field">
+        <span>Tags</span>
+        <input
+          type="text"
+          value="${escapeAttr((device.tags || []).join(", "))}"
+          data-device-field="tags"
+          placeholder="lead, master clock, voix, live..."
+        >
+      </label>
 
       <label class="field">
         <span>Notes</span>
@@ -2861,10 +3156,15 @@ function getStructureSignature() {
       type: normalizeDeviceType(device.type),
       manufacturer: device.manufacturer || "",
       model: device.model || "",
+      notes: device.notes || "",
+      color: normalizeColor(device.color, pickAccentColor(0)),
+      boardView: device.boardView === "compact" ? "compact" : "full",
+      tags: normalizeTags(device.tags),
       ports: device.ports.map((port) => ({
         id: port.id,
         kind: port.kind,
         name: port.name,
+        description: port.description || "",
         midiChannel: isMidiKind(port.kind) ? normalizeMidiChannel(port.midiChannel, "all") : null
       }))
     })),
@@ -2873,6 +3173,7 @@ function getStructureSignature() {
       source: connection.source,
       target: connection.target,
       label: connection.label || "",
+      notes: connection.notes || "",
       midiChannel: normalizeConnectionMidiChannel(connection.midiChannel)
     }))
   });
@@ -2989,7 +3290,7 @@ function serializeDeviceLibraryExport() {
 
 function buildDeviceLibraryExport() {
   return {
-    type: "routage-studio-library",
+    type: LIBRARY_EXPORT_TYPE,
     version: LIBRARY_VERSION,
     exportedAt: new Date().toISOString(),
     app: APP_NAME,
@@ -3044,6 +3345,7 @@ function normalizeSchema(input) {
     : [];
 
   return {
+    type: SCHEMA_TYPE,
     version: SCHEMA_VERSION,
     meta,
     devices,
@@ -3062,6 +3364,7 @@ function normalizeDeviceLibrary(input) {
     type: normalizeDeviceType(entry?.type),
     manufacturer: cleanText(entry?.manufacturer),
     model: cleanText(entry?.model),
+    tags: normalizeTags(entry?.tags),
     notes: cleanText(entry?.notes),
     color: normalizeColor(entry?.color, pickAccentColor(index)),
     ports: Array.isArray(entry?.ports)
@@ -3082,6 +3385,7 @@ function createLibraryEntryFromDevice(device) {
     type: normalizeDeviceType(device.type),
     manufacturer: device.manufacturer || "",
     model: device.model || "",
+    tags: normalizeTags(device.tags),
     notes: device.notes || "",
     color: normalizeColor(device.color, pickAccentColor(0)),
     ports: device.ports.map((port) => ({
@@ -3155,6 +3459,7 @@ function normalizeDevice(device, index) {
     type: normalizeDeviceType(device?.type),
     manufacturer: cleanText(device?.manufacturer),
     model: cleanText(device?.model),
+    tags: normalizeTags(device?.tags),
     notes: cleanText(device?.notes),
     color: normalizeColor(device?.color, pickAccentColor(index)),
     boardView: device?.boardView === "compact" ? "compact" : "full",
@@ -3312,7 +3617,7 @@ function buildLogicGraphEdgeLabel(edgeGroup) {
 }
 
 function buildLogicGraphLayout(data) {
-  const nodeWidth = 252;
+  const nodeWidth = 264;
   const nodeHeight = 96;
   const paddingX = 90;
   const paddingY = 80;
@@ -4236,6 +4541,7 @@ function getConnection(connectionId) {
 function createEmptySchema() {
   const now = new Date().toISOString();
   return {
+    type: SCHEMA_TYPE,
     version: SCHEMA_VERSION,
     meta: {
       title: APP_NAME,
@@ -4258,6 +4564,18 @@ function createPort(kind, name) {
   };
 }
 
+function createTemplateSchema(templateId) {
+  switch (templateId) {
+    case "hybrid-studio":
+      return createHybridStudioSchema();
+    case "modular-clock-lab":
+      return createModularClockLabSchema();
+    case "live-compact":
+    default:
+      return createSampleSchema();
+  }
+}
+
 function createSampleSchema() {
   const now = new Date().toISOString();
 
@@ -4267,6 +4585,7 @@ function createSampleSchema() {
     type: "sampler",
     manufacturer: "Elektron",
     model: "Centre du live set",
+    tags: ["live", "master"],
     notes: "Machine principale pour les patterns et les samples.",
     color: "#0f766e",
     position: { x: 80, y: 110 },
@@ -4285,6 +4604,7 @@ function createSampleSchema() {
     type: "synth",
     manufacturer: "ASM",
     model: "Voix polyphonique",
+    tags: ["lead", "midi"],
     notes: "Reçoit le MIDI du sampler et repart en audio mono.",
     color: "#2f6fd0",
     position: { x: 500, y: 80 },
@@ -4301,6 +4621,7 @@ function createSampleSchema() {
     type: "modular",
     manufacturer: "Eurorack",
     model: "Séquence et modulation",
+    tags: ["cv", "clock"],
     notes: "Distribue CV, gate et horloge.",
     color: "#b93838",
     position: { x: 520, y: 380 },
@@ -4318,6 +4639,7 @@ function createSampleSchema() {
     type: "drum-machine",
     manufacturer: "Percussions",
     model: "Triggers externes",
+    tags: ["drums", "clock"],
     notes: "Reçoit gate et clock du rack modulaire.",
     color: "#d97706",
     position: { x: 930, y: 360 },
@@ -4334,6 +4656,7 @@ function createSampleSchema() {
     type: "audio-interface",
     manufacturer: "Studio",
     model: "Capture et monitoring",
+    tags: ["interface", "usb"],
     notes: "Centralise les entrées audio et relie l'ordinateur en USB.",
     color: "#2a7c5a",
     position: { x: 960, y: 80 },
@@ -4348,6 +4671,7 @@ function createSampleSchema() {
   };
 
   return normalizeSchema({
+    type: SCHEMA_TYPE,
     version: SCHEMA_VERSION,
     meta: {
       title: "Exemple de setup live",
@@ -4426,6 +4750,422 @@ function createSampleSchema() {
   });
 }
 
+function createHybridStudioSchema() {
+  const now = new Date().toISOString();
+
+  return normalizeSchema({
+    type: SCHEMA_TYPE,
+    version: SCHEMA_VERSION,
+    meta: {
+      title: "Gabarit studio hybride",
+      description:
+        "Point de départ orienté studio avec ordinateur, interface, mixage, monitoring, voix et instruments externes.",
+      createdAt: now,
+      updatedAt: now
+    },
+    devices: [
+      {
+        id: "hybrid-computer",
+        name: "Ordinateur / DAW",
+        type: "computer",
+        manufacturer: "Studio",
+        model: "Session principale",
+        tags: ["studio", "daw", "usb"],
+        notes: "Cœur logiciel du setup et enregistrement des prises.",
+        color: "#d14124",
+        position: { x: 88, y: 84 },
+        ports: [
+          { id: "hybrid-computer-usb", kind: "usb", name: "USB", description: "", midiChannel: null },
+          { id: "hybrid-computer-midi-out", kind: "midi-out", name: "MIDI Out", description: "", midiChannel: "all" }
+        ]
+      },
+      {
+        id: "hybrid-interface",
+        name: "Interface audio",
+        type: "audio-interface",
+        manufacturer: "RME",
+        model: "I/O principale",
+        tags: ["studio", "interface"],
+        notes: "Convertit et centralise les flux audio et MIDI.",
+        color: "#f0a02f",
+        position: { x: 456, y: 70 },
+        ports: [
+          { id: "hybrid-interface-audio-in-1", kind: "audio-in", name: "Input 1", description: "", midiChannel: null },
+          { id: "hybrid-interface-audio-in-2", kind: "audio-in", name: "Input 2", description: "", midiChannel: null },
+          { id: "hybrid-interface-audio-in-3", kind: "audio-in", name: "Input 3", description: "", midiChannel: null },
+          { id: "hybrid-interface-audio-in-4", kind: "audio-in", name: "Input 4", description: "", midiChannel: null },
+          { id: "hybrid-interface-audio-out-1", kind: "audio-out", name: "Monitor Out L", description: "", midiChannel: null },
+          { id: "hybrid-interface-audio-out-2", kind: "audio-out", name: "Monitor Out R", description: "", midiChannel: null },
+          { id: "hybrid-interface-midi-in", kind: "midi-in", name: "MIDI In", description: "", midiChannel: "all" },
+          { id: "hybrid-interface-midi-out", kind: "midi-out", name: "MIDI Out", description: "", midiChannel: "all" },
+          { id: "hybrid-interface-usb", kind: "usb", name: "USB", description: "", midiChannel: null }
+        ]
+      },
+      {
+        id: "hybrid-mixer",
+        name: "Table de mixage",
+        type: "mixer",
+        manufacturer: "Allen & Heath",
+        model: "Sous-mix instruments",
+        tags: ["mix", "studio"],
+        notes: "Sous-mix de plusieurs sources avant l'interface.",
+        color: "#bc6318",
+        position: { x: 860, y: 94 },
+        ports: [
+          { id: "hybrid-mixer-audio-in-1", kind: "audio-in", name: "Channel 1", description: "", midiChannel: null },
+          { id: "hybrid-mixer-audio-in-2", kind: "audio-in", name: "Channel 2", description: "", midiChannel: null },
+          { id: "hybrid-mixer-audio-in-3", kind: "audio-in", name: "Channel 3", description: "", midiChannel: null },
+          { id: "hybrid-mixer-audio-out-l", kind: "audio-out", name: "Main Out L", description: "", midiChannel: null },
+          { id: "hybrid-mixer-audio-out-r", kind: "audio-out", name: "Main Out R", description: "", midiChannel: null }
+        ]
+      },
+      {
+        id: "hybrid-groovebox",
+        name: "Groovebox",
+        type: "groovebox",
+        manufacturer: "Elektron",
+        model: "Patterns et séquences",
+        tags: ["live", "drums", "midi"],
+        notes: "Source rythmique et séquence MIDI vers le synthé.",
+        color: "#b93838",
+        position: { x: 116, y: 392 },
+        ports: [
+          { id: "hybrid-groovebox-audio-out-l", kind: "audio-out", name: "Main Out L", description: "", midiChannel: null },
+          { id: "hybrid-groovebox-audio-out-r", kind: "audio-out", name: "Main Out R", description: "", midiChannel: null },
+          { id: "hybrid-groovebox-midi-out", kind: "midi-out", name: "MIDI Out", description: "", midiChannel: "2" }
+        ]
+      },
+      {
+        id: "hybrid-synth",
+        name: "Synthé poly",
+        type: "synth",
+        manufacturer: "Sequential",
+        model: "Pads et basses",
+        tags: ["lead", "pad"],
+        notes: "Piloté en MIDI et renvoyé vers la console.",
+        color: "#2f6fd0",
+        position: { x: 472, y: 388 },
+        ports: [
+          { id: "hybrid-synth-midi-in", kind: "midi-in", name: "MIDI In", description: "", midiChannel: "2" },
+          { id: "hybrid-synth-audio-out-l", kind: "audio-out", name: "Out L", description: "", midiChannel: null },
+          { id: "hybrid-synth-audio-out-r", kind: "audio-out", name: "Out R", description: "", midiChannel: null }
+        ]
+      },
+      {
+        id: "hybrid-micro",
+        name: "Micro voix",
+        type: "microphone",
+        manufacturer: "Shure",
+        model: "Lead vocal",
+        tags: ["voix", "micro"],
+        notes: "Prise voix directe vers l'interface.",
+        color: "#9d760d",
+        position: { x: 844, y: 418 },
+        ports: [
+          { id: "hybrid-micro-audio-out", kind: "audio-out", name: "Output", description: "", midiChannel: null }
+        ]
+      },
+      {
+        id: "hybrid-monitor",
+        name: "Monitoring",
+        type: "monitor",
+        manufacturer: "Nearfield",
+        model: "Écoute principale",
+        tags: ["monitoring", "studio"],
+        notes: "Écoute de contrôle du mix.",
+        color: "#207b85",
+        position: { x: 1182, y: 218 },
+        ports: [
+          { id: "hybrid-monitor-audio-in-l", kind: "audio-in", name: "In L", description: "", midiChannel: null },
+          { id: "hybrid-monitor-audio-in-r", kind: "audio-in", name: "In R", description: "", midiChannel: null }
+        ]
+      }
+    ],
+    connections: [
+      {
+        id: "hybrid-computer-usb-interface",
+        source: { deviceId: "hybrid-computer", portId: "hybrid-computer-usb" },
+        target: { deviceId: "hybrid-interface", portId: "hybrid-interface-usb" },
+        label: "",
+        notes: "",
+        midiChannel: null
+      },
+      {
+        id: "hybrid-groovebox-midi-synth",
+        source: { deviceId: "hybrid-groovebox", portId: "hybrid-groovebox-midi-out" },
+        target: { deviceId: "hybrid-synth", portId: "hybrid-synth-midi-in" },
+        label: "",
+        notes: "",
+        midiChannel: "inherit"
+      },
+      {
+        id: "hybrid-groovebox-left",
+        source: { deviceId: "hybrid-groovebox", portId: "hybrid-groovebox-audio-out-l" },
+        target: { deviceId: "hybrid-mixer", portId: "hybrid-mixer-audio-in-1" },
+        label: "",
+        notes: "",
+        midiChannel: null
+      },
+      {
+        id: "hybrid-groovebox-right",
+        source: { deviceId: "hybrid-groovebox", portId: "hybrid-groovebox-audio-out-r" },
+        target: { deviceId: "hybrid-mixer", portId: "hybrid-mixer-audio-in-2" },
+        label: "",
+        notes: "",
+        midiChannel: null
+      },
+      {
+        id: "hybrid-synth-left",
+        source: { deviceId: "hybrid-synth", portId: "hybrid-synth-audio-out-l" },
+        target: { deviceId: "hybrid-mixer", portId: "hybrid-mixer-audio-in-3" },
+        label: "",
+        notes: "",
+        midiChannel: null
+      },
+      {
+        id: "hybrid-mixer-main-left",
+        source: { deviceId: "hybrid-mixer", portId: "hybrid-mixer-audio-out-l" },
+        target: { deviceId: "hybrid-interface", portId: "hybrid-interface-audio-in-1" },
+        label: "Mix L",
+        notes: "",
+        midiChannel: null
+      },
+      {
+        id: "hybrid-mixer-main-right",
+        source: { deviceId: "hybrid-mixer", portId: "hybrid-mixer-audio-out-r" },
+        target: { deviceId: "hybrid-interface", portId: "hybrid-interface-audio-in-2" },
+        label: "Mix R",
+        notes: "",
+        midiChannel: null
+      },
+      {
+        id: "hybrid-micro-voice",
+        source: { deviceId: "hybrid-micro", portId: "hybrid-micro-audio-out" },
+        target: { deviceId: "hybrid-interface", portId: "hybrid-interface-audio-in-3" },
+        label: "Voice",
+        notes: "",
+        midiChannel: null
+      },
+      {
+        id: "hybrid-monitor-left",
+        source: { deviceId: "hybrid-interface", portId: "hybrid-interface-audio-out-1" },
+        target: { deviceId: "hybrid-monitor", portId: "hybrid-monitor-audio-in-l" },
+        label: "",
+        notes: "",
+        midiChannel: null
+      },
+      {
+        id: "hybrid-monitor-right",
+        source: { deviceId: "hybrid-interface", portId: "hybrid-interface-audio-out-2" },
+        target: { deviceId: "hybrid-monitor", portId: "hybrid-monitor-audio-in-r" },
+        label: "",
+        notes: "",
+        midiChannel: null
+      }
+    ]
+  });
+}
+
+function createModularClockLabSchema() {
+  const now = new Date().toISOString();
+
+  return normalizeSchema({
+    type: SCHEMA_TYPE,
+    version: SCHEMA_VERSION,
+    meta: {
+      title: "Gabarit lab modulaire",
+      description:
+        "Point de départ centré clock, gate et CV pour un setup modulaire synchronisé avec séquenceur et instruments externes.",
+      createdAt: now,
+      updatedAt: now
+    },
+    devices: [
+      {
+        id: "modlab-sequencer",
+        name: "Séquenceur maître",
+        type: "sequencer",
+        manufacturer: "Squarp",
+        model: "Master clock",
+        tags: ["clock", "master", "cv"],
+        notes: "Gère l'horloge, les séquences CV et le MIDI global.",
+        color: "#f0a02f",
+        position: { x: 92, y: 104 },
+        ports: [
+          { id: "modlab-sequencer-clock-out", kind: "clock-out", name: "Clock Out", description: "", midiChannel: null },
+          { id: "modlab-sequencer-gate-out", kind: "gate-out", name: "Gate Out", description: "", midiChannel: null },
+          { id: "modlab-sequencer-cv-out", kind: "cv-out", name: "Pitch CV Out", description: "", midiChannel: null },
+          { id: "modlab-sequencer-midi-out", kind: "midi-out", name: "MIDI Out", description: "", midiChannel: "1" }
+        ]
+      },
+      {
+        id: "modlab-rack",
+        name: "Rack Eurorack",
+        type: "modular",
+        manufacturer: "Eurorack",
+        model: "Voix et modulation",
+        tags: ["modular", "cv", "gate"],
+        notes: "Voix modulaire principale pilotée par clock, gate et CV.",
+        color: "#b93838",
+        position: { x: 456, y: 84 },
+        ports: [
+          { id: "modlab-rack-clock-in", kind: "clock-in", name: "Clock In", description: "", midiChannel: null },
+          { id: "modlab-rack-gate-in", kind: "gate-in", name: "Gate In", description: "", midiChannel: null },
+          { id: "modlab-rack-cv-in", kind: "cv-in", name: "Pitch CV In", description: "", midiChannel: null },
+          { id: "modlab-rack-audio-out", kind: "audio-out", name: "Main Out", description: "", midiChannel: null },
+          { id: "modlab-rack-clock-out", kind: "clock-out", name: "Clock Out", description: "", midiChannel: null }
+        ]
+      },
+      {
+        id: "modlab-drum",
+        name: "Boîte à rythme",
+        type: "drum-machine",
+        manufacturer: "Roland",
+        model: "Rythmes sync",
+        tags: ["drums", "clock"],
+        notes: "Synchronisée en clock externe, renvoie l'audio vers la console.",
+        color: "#d14124",
+        position: { x: 852, y: 84 },
+        ports: [
+          { id: "modlab-drum-clock-in", kind: "clock-in", name: "Clock In", description: "", midiChannel: null },
+          { id: "modlab-drum-audio-out-l", kind: "audio-out", name: "Out L", description: "", midiChannel: null },
+          { id: "modlab-drum-audio-out-r", kind: "audio-out", name: "Out R", description: "", midiChannel: null }
+        ]
+      },
+      {
+        id: "modlab-synth",
+        name: "Synthé externe",
+        type: "synth",
+        manufacturer: "Moog",
+        model: "Bass synth",
+        tags: ["bass", "midi"],
+        notes: "Voix externe pilotée en MIDI depuis le séquenceur.",
+        color: "#2f6fd0",
+        position: { x: 460, y: 420 },
+        ports: [
+          { id: "modlab-synth-midi-in", kind: "midi-in", name: "MIDI In", description: "", midiChannel: "1" },
+          { id: "modlab-synth-audio-out", kind: "audio-out", name: "Audio Out", description: "", midiChannel: null }
+        ]
+      },
+      {
+        id: "modlab-mixer",
+        name: "Mixeur performance",
+        type: "mixer",
+        manufacturer: "Performance",
+        model: "Somme des retours",
+        tags: ["mix", "live"],
+        notes: "Réunit les sources avant l'interface ou la façade.",
+        color: "#bc6318",
+        position: { x: 854, y: 388 },
+        ports: [
+          { id: "modlab-mixer-in-1", kind: "audio-in", name: "Input 1", description: "", midiChannel: null },
+          { id: "modlab-mixer-in-2", kind: "audio-in", name: "Input 2", description: "", midiChannel: null },
+          { id: "modlab-mixer-in-3", kind: "audio-in", name: "Input 3", description: "", midiChannel: null },
+          { id: "modlab-mixer-out-l", kind: "audio-out", name: "Main Out L", description: "", midiChannel: null },
+          { id: "modlab-mixer-out-r", kind: "audio-out", name: "Main Out R", description: "", midiChannel: null }
+        ]
+      },
+      {
+        id: "modlab-interface",
+        name: "Interface audio",
+        type: "audio-interface",
+        manufacturer: "Studio",
+        model: "Capture du lab",
+        tags: ["interface", "record"],
+        notes: "Capture stéréo du setup modulaire.",
+        color: "#207b85",
+        position: { x: 1228, y: 380 },
+        ports: [
+          { id: "modlab-interface-in-l", kind: "audio-in", name: "Input L", description: "", midiChannel: null },
+          { id: "modlab-interface-in-r", kind: "audio-in", name: "Input R", description: "", midiChannel: null },
+          { id: "modlab-interface-usb", kind: "usb", name: "USB", description: "", midiChannel: null }
+        ]
+      }
+    ],
+    connections: [
+      {
+        id: "modlab-clock-rack",
+        source: { deviceId: "modlab-sequencer", portId: "modlab-sequencer-clock-out" },
+        target: { deviceId: "modlab-rack", portId: "modlab-rack-clock-in" },
+        label: "",
+        notes: "",
+        midiChannel: null
+      },
+      {
+        id: "modlab-gate-rack",
+        source: { deviceId: "modlab-sequencer", portId: "modlab-sequencer-gate-out" },
+        target: { deviceId: "modlab-rack", portId: "modlab-rack-gate-in" },
+        label: "",
+        notes: "",
+        midiChannel: null
+      },
+      {
+        id: "modlab-cv-rack",
+        source: { deviceId: "modlab-sequencer", portId: "modlab-sequencer-cv-out" },
+        target: { deviceId: "modlab-rack", portId: "modlab-rack-cv-in" },
+        label: "",
+        notes: "",
+        midiChannel: null
+      },
+      {
+        id: "modlab-clock-drum",
+        source: { deviceId: "modlab-rack", portId: "modlab-rack-clock-out" },
+        target: { deviceId: "modlab-drum", portId: "modlab-drum-clock-in" },
+        label: "",
+        notes: "",
+        midiChannel: null
+      },
+      {
+        id: "modlab-midi-synth",
+        source: { deviceId: "modlab-sequencer", portId: "modlab-sequencer-midi-out" },
+        target: { deviceId: "modlab-synth", portId: "modlab-synth-midi-in" },
+        label: "",
+        notes: "",
+        midiChannel: "inherit"
+      },
+      {
+        id: "modlab-rack-audio",
+        source: { deviceId: "modlab-rack", portId: "modlab-rack-audio-out" },
+        target: { deviceId: "modlab-mixer", portId: "modlab-mixer-in-1" },
+        label: "",
+        notes: "",
+        midiChannel: null
+      },
+      {
+        id: "modlab-synth-audio",
+        source: { deviceId: "modlab-synth", portId: "modlab-synth-audio-out" },
+        target: { deviceId: "modlab-mixer", portId: "modlab-mixer-in-2" },
+        label: "",
+        notes: "",
+        midiChannel: null
+      },
+      {
+        id: "modlab-drum-left",
+        source: { deviceId: "modlab-drum", portId: "modlab-drum-audio-out-l" },
+        target: { deviceId: "modlab-mixer", portId: "modlab-mixer-in-3" },
+        label: "Drums L",
+        notes: "",
+        midiChannel: null
+      },
+      {
+        id: "modlab-mix-left",
+        source: { deviceId: "modlab-mixer", portId: "modlab-mixer-out-l" },
+        target: { deviceId: "modlab-interface", portId: "modlab-interface-in-l" },
+        label: "",
+        notes: "",
+        midiChannel: null
+      },
+      {
+        id: "modlab-mix-right",
+        source: { deviceId: "modlab-mixer", portId: "modlab-mixer-out-r" },
+        target: { deviceId: "modlab-interface", portId: "modlab-interface-in-r" },
+        label: "",
+        notes: "",
+        midiChannel: null
+      }
+    ]
+  });
+}
+
 function showToast(message) {
   if (!message) {
     return;
@@ -4448,6 +5188,32 @@ function createId(prefix) {
 
 function cleanText(value) {
   return typeof value === "string" ? value.trim() : "";
+}
+
+function normalizeTags(value) {
+  const rawValues = Array.isArray(value)
+    ? value
+    : typeof value === "string"
+      ? value.split(",")
+      : [];
+  const seen = new Set();
+
+  return rawValues
+    .map((entry) => cleanText(entry))
+    .filter(Boolean)
+    .map((entry) => entry.replace(/^#+/, ""))
+    .filter((entry) => {
+      const normalized = entry.toLowerCase();
+      if (seen.has(normalized)) {
+        return false;
+      }
+      seen.add(normalized);
+      return true;
+    });
+}
+
+function parseTagsInput(value) {
+  return normalizeTags(value);
 }
 
 function normalizeColor(value, fallback) {
@@ -4509,6 +5275,20 @@ function getDeviceTypeLabel(value) {
   return getDeviceTypeMeta(value).label;
 }
 
+function renderDeviceTypeFilterOptionsMarkup(selectedValue) {
+  const normalized = normalizeDeviceType(selectedValue);
+  return [
+    `<option value="all" ${selectedValue === "all" ? "selected" : ""}>Tous les types</option>`,
+    ...DEVICE_TYPE_OPTIONS.map(
+      (entry) => `
+        <option value="${entry.value}" ${entry.value === normalized ? "selected" : ""}>
+          ${escapeHtml(entry.label)}
+        </option>
+      `
+    )
+  ].join("");
+}
+
 function renderDeviceTypeOptionsMarkup(selectedValue) {
   const normalized = normalizeDeviceType(selectedValue);
   return DEVICE_TYPE_OPTIONS.map(
@@ -4518,6 +5298,30 @@ function renderDeviceTypeOptionsMarkup(selectedValue) {
       </option>
     `
   ).join("");
+}
+
+function renderTagChips(tags) {
+  const normalized = normalizeTags(tags);
+  if (!normalized.length) {
+    return "";
+  }
+
+  return `
+    <div class="tag-list">
+      ${normalized
+        .slice(0, 5)
+        .map((tag) => `<span class="tag-chip">#${escapeHtml(tag)}</span>`)
+        .join("")}
+    </div>
+  `;
+}
+
+function truncateText(value, maxLength) {
+  const text = String(value || "");
+  if (text.length <= maxLength) {
+    return text;
+  }
+  return `${text.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
 }
 
 function renderDeviceTypeIcon(type, color, options = {}) {

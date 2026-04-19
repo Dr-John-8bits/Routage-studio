@@ -19,17 +19,30 @@ L'application s'organise autour de trois zones principales:
 
 Les sections peuvent etre repliees pour accelerer la navigation.
 
+Le theme suit maintenant automatiquement le mode clair ou sombre de votre systeme.
+
 ## Demarrage rapide
 
 1. Ouvrir `index.html` dans un navigateur.
 2. Saisir le nom du projet dans `Routage Studio`.
-3. Creer un premier appareil dans l'inventaire.
-4. Lui ajouter les ports necessaires.
-5. L'envoyer sur le tableau visuel.
-6. Refaire l'operation pour les autres appareils.
-7. Creer les liaisons entre sorties et entrees compatibles.
-8. Verifier le panneau `Analyse du patch`.
-9. Exporter le resultat en `JSON`.
+3. Charger un gabarit si vous voulez partir d'un setup deja prepare.
+4. Creer un premier appareil dans l'inventaire.
+5. Lui ajouter les ports necessaires.
+6. L'envoyer sur le tableau visuel.
+7. Refaire l'operation pour les autres appareils.
+8. Creer les liaisons entre sorties et entrees compatibles.
+9. Verifier le panneau `Analyse du patch`.
+10. Exporter le resultat en `JSON`.
+
+## Utiliser les gabarits
+
+Une section `Gabarits` propose plusieurs points de depart:
+
+- `Live compact`
+- `Studio hybride`
+- `Lab modulaire`
+
+Chaque gabarit charge un schema complet d'exemple, modifiable ensuite librement.
 
 ## Creer et gerer des appareils
 
@@ -38,6 +51,7 @@ Chaque appareil peut contenir:
 - un nom
 - un type d'appareil
 - une couleur
+- des tags libres
 - des informations de marque, de famille ou de notes
 - un ensemble libre de ports
 
@@ -53,6 +67,15 @@ Le type d'appareil sert a deux choses:
 
 - proposer une typologie adaptee aux instruments electroniques et au studio
 - afficher une icone de reperage dans l'inventaire, le tableau visuel et la vue graphe
+
+Les tags servent a classer les instruments par usage, par exemple:
+
+- `lead`
+- `master clock`
+- `live`
+- `studio`
+- `voix`
+- `drums`
 
 ## Utiliser la bibliotheque d'appareils
 
@@ -71,6 +94,23 @@ Important:
 - la bibliotheque est locale au navigateur courant
 - des boutons `Sauvegarder` et `Charger` permettent maintenant d'exporter ou d'importer la bibliotheque en JSON
 - l'import de bibliotheque fusionne avec la bibliotheque locale existante et remplace les doublons evidents
+
+## Rechercher et filtrer
+
+L'inventaire du schema et la bibliotheque disposent maintenant:
+
+- d'un champ de recherche texte
+- d'un filtre par type d'appareil
+
+La recherche couvre:
+
+- le nom
+- le type
+- la marque
+- le modele ou role
+- les tags
+- les notes
+- les noms de ports
 
 ## Ajouter des ports
 
@@ -194,9 +234,12 @@ Le JSON exporte contient notamment:
 
 - les metadonnees du schema
 - les appareils
+- les tags d'appareils
 - les ports
 - les positions dans le tableau
 - les liaisons
+
+Le format est detaille dans [SCHEMA_FORMAT.md](SCHEMA_FORMAT.md).
 
 ## Responsive design
 
@@ -214,10 +257,11 @@ L'interface est pensee pour rester utilisable sur desktop et sur ecrans plus com
 
 - la sauvegarde locale et la bibliotheque sont liees au navigateur courant
 - l'application ne synchronise pas encore automatiquement les donnees entre plusieurs machines
-- l'export de bibliotheque d'appareils peut encore etre ameliore
+- une vraie recette navigateur reste importante apres de gros ajustements UX
 
 ## Ou aller ensuite
 
 - presentation du projet: [README.md](README.md)
+- format JSON: [SCHEMA_FORMAT.md](SCHEMA_FORMAT.md)
 - etat d'avancement et roadmap: [PROJECT_STATUS.md](PROJECT_STATUS.md)
 - exemple de schema: [examples/studio-compact.json](examples/studio-compact.json)

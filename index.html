@@ -121,6 +121,16 @@
               </label>
 
               <label class="field">
+                <span>Tags</span>
+                <input
+                  id="newDeviceTags"
+                  name="tags"
+                  type="text"
+                  placeholder="lead, master clock, live, studio..."
+                >
+              </label>
+
+              <label class="field">
                 <span>Rôle ou notes</span>
                 <textarea
                   id="newDeviceNotes"
@@ -136,6 +146,16 @@
             </form>
           </section>
 
+          <section class="panel-section" data-help-key="setup-templates" data-section-id="setup-templates">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Démarrage</p>
+                <h2>Gabarits</h2>
+              </div>
+            </div>
+            <div id="templateList" class="template-list"></div>
+          </section>
+
           <section class="panel-section" data-help-key="device-list" data-section-id="device-list">
             <div class="section-heading">
               <div>
@@ -144,6 +164,17 @@
               </div>
               <span id="deviceCountBadge" class="count-badge">0</span>
             </div>
+            <div class="filter-grid" data-help-key="inventory-filters">
+              <label class="field field--dense">
+                <span>Recherche</span>
+                <input id="deviceSearchInput" type="search" placeholder="Nom, marque, tag, port...">
+              </label>
+              <label class="field field--dense">
+                <span>Type</span>
+                <select id="deviceTypeFilter"></select>
+              </label>
+            </div>
+            <p id="deviceFilterSummary" class="filter-summary"></p>
             <div id="deviceList" class="device-list"></div>
           </section>
 
@@ -172,6 +203,17 @@
                 </button>
               </div>
             </div>
+            <div class="filter-grid" data-help-key="library-filters">
+              <label class="field field--dense">
+                <span>Recherche</span>
+                <input id="librarySearchInput" type="search" placeholder="Nom, marque, tag, port...">
+              </label>
+              <label class="field field--dense">
+                <span>Type</span>
+                <select id="libraryTypeFilter"></select>
+              </label>
+            </div>
+            <p id="libraryFilterSummary" class="filter-summary"></p>
             <div id="libraryList" class="device-list"></div>
           </section>
 

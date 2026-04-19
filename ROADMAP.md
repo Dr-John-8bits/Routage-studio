@@ -14,35 +14,35 @@ Le projet n'a pas besoin d'etre reecrit. En revanche, il a encore besoin d'une p
 
 ## Audit prioritaire
 
-### P1 - La vue Graphe ne se rafraichit pas completement apres certains changements visuels
+### P1 - La vue Graphe ne se rafraichissait pas completement apres certains changements visuels
 
-Le cache structurel ne prend pas encore en compte tous les attributs utilises par la vue graphe. Aujourd'hui, la couleur de l'appareil est consommee dans le bundle du graphe, mais n'entre pas dans la signature de cache. Resultat possible: changer une couleur peut laisser une icone ou un noeud du graphe visuellement stale jusqu'a une autre modification plus structurelle.
+Le cache structurel ne prenait pas encore en compte tous les attributs utilises par la vue graphe. Ce point a ete corrige en ajoutant les attributs visuels et descriptifs utilises par le graphe a la signature de cache.
 
 References:
 
 - [app.js](app.js:2856)
 - [app.js](app.js:3216)
 
-### P2 - Les noeuds du graphe risquent de deborder avec des noms ou sous-titres longs
+### P2 - Les noeuds du graphe risquaient de deborder avec des noms ou sous-titres longs
 
-La mise en page du graphe repose sur une largeur fixe de noeud, tandis que les textes sont rendus bruts sans troncature ni clipping. Des noms d'appareils plus longs ou des sous-titres riches peuvent sortir du cadre et nuire a la lisibilite.
+La mise en page du graphe reposait sur une largeur fixe de noeud, tandis que les textes etaient rendus bruts sans troncature ni clipping. Une troncature visuelle a ete ajoutee pour eviter les debordements les plus courants, mais une recette visuelle reste souhaitable sur des cas tres longs.
 
 References:
 
 - [app.js](app.js:3314)
 - [app.js](app.js:2346)
 
-### P2 - Le dark mode demande n'est pas encore implemente
+### P2 - Le dark mode demande n'etait pas encore implemente
 
-Le theme actuel reste essentiellement en mode clair. Il n'y a pas encore de variante `prefers-color-scheme: dark`, alors que c'est un besoin deja exprime pour l'application.
+Le theme etait essentiellement en mode clair. Ce point est maintenant traite avec un dark mode automatique base sur `prefers-color-scheme`, dans une direction visuelle inspiree de la TR-808.
 
 Reference:
 
 - [styles.css](styles.css:1)
 
-### P3 - La detection de doublons dans la bibliotheque n'est pas coherente entre sauvegarde manuelle et import
+### P3 - La detection de doublons dans la bibliotheque n'etait pas coherente entre sauvegarde manuelle et import
 
-La sauvegarde manuelle compare les champs a l'identique, alors que la fusion a l'import normalise les chaines. Cela peut creer des doublons acceptes localement puis fusionnes d'une autre facon lors d'un import ulterieur.
+La sauvegarde manuelle comparait les champs a l'identique, alors que la fusion a l'import normalisait les chaines. Ce point a ete harmonise pour utiliser la meme logique d'identite dans les deux cas.
 
 References:
 
@@ -95,12 +95,33 @@ Objectif: rendre Routage Studio plus utile pour de vrais setups complexes.
 - ajouter un export plus propre pour impression, partage et documentation technique
 - envisager a terme plusieurs pages ou vues de routage dans un meme projet
 
+## Etat apres implementation
+
+Ce qui est maintenant livre:
+
+- cache graphe corrige pour les attributs visuels utiles
+- troncature des libelles longs dans le graphe
+- dark mode automatique selon le systeme
+- direction visuelle claire/sombre plus proche d'une palette TR-808
+- recherche texte et filtre par type dans l'inventaire et la bibliotheque
+- tags d'appareils utilisables pour classement et recherche
+- gabarits integres `Live compact`, `Studio hybride` et `Lab modulaire`
+- format JSON documente dans [SCHEMA_FORMAT.md](SCHEMA_FORMAT.md)
+- deduplication de bibliotheque harmonisee entre sauvegarde et import
+
+Ce qui reste prioritaire:
+
+- recette navigateur complete sur desktop et mobile
+- verification visuelle fine du dark mode sur tous les ecrans et navigateurs cibles
+- verification impression / PDF sur des schemas denses
+- premiers tests automatises sur les regles de compatibilite et les diagnostics
+
 ## Prochaine etape recommandee
 
-Le meilleur prochain chantier est:
+Le meilleur prochain chantier est maintenant:
 
-1. corriger les deux points de stabilite de la vue graphe
-2. implementer le dark mode systeme
+1. faire une vraie recette visuelle et fonctionnelle dans le navigateur
+2. durcir l'impression, le PDF et le partage sur des schemas denses
 3. poser une base de tests automatises minimale
 
-Cela donnerait un vrai saut de qualite avant les finitions plus cosmiques.
+Cela donnera une base plus solide avant un decoupage du code et une publication plus large.
