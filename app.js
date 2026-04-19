@@ -311,10 +311,10 @@ const HELP_CONTENT = {
   "reset-board": {
     title: "Réinitialiser le tableau",
     body:
-      "Remet le tableau visuel à plat en repositionnant les appareils sur une grille propre et en supprimant les liaisons en cours. L'inventaire des appareils et leurs ports sont conservés.",
+      "Vide le plateau central et supprime les liaisons du patch en cours, tout en conservant les appareils dans l'inventaire et leurs ports.",
     tips: [
-      "Pratique pour repartir d'un câblage propre sans recréer tous les appareils.",
-      "Les appareils gardent leurs noms, leurs couleurs et leurs ports."
+      "Pratique pour refaire un patch sans avoir à recréer toutes les machines.",
+      "Les appareils restent disponibles dans l'inventaire et peuvent être réajoutés au tableau."
     ]
   },
   "reset-inventory": {
@@ -868,6 +868,7 @@ function handleAddDevice(event) {
     tags: parseTagsInput(elements.newDeviceTags.value),
     notes: elements.newDeviceNotes.value.trim(),
     color: nextColor,
+    onBoard: true,
     position: getNextDevicePosition(),
     ports: []
   };
@@ -940,7 +941,9 @@ async function handleLibraryImportFile(event) {
       details.push(`${mergeResult.added} ajouté${mergeResult.added > 1 ? "s" : ""}`);
     }
     if (mergeResult.replaced) {
-      details.push(`${mergeResult.replaced} mis à jour`);
+      details.push(
+        `${mergeResult.replaced} doublon${mergeResult.replaced > 1 ? "s" : ""} mis à jour`
+      );
     }
 
     const importedLabel = `${importedCount} instrument${importedCount > 1 ? "s" : ""} importé${importedCount > 1 ? "s" : ""}`;
@@ -1041,7 +1044,7 @@ function handleBoardClick(event) {
 
   const deleteButton = event.target.closest("[data-action='delete-device-board']");
   if (deleteButton) {
-    deleteDevice(deleteButton.dataset.deviceId);
+    removeDeviceFromBoard(deleteButton.dataset.deviceId);
     return;
   }
 
@@ -1162,6 +1165,16 @@ function handleInspectorClick(event) {
 
   if (action === "delete-device") {
     deleteDevice(actionTarget.dataset.deviceId);
+    return;
+  }
+
+  if (action === "place-device-on-board") {
+    placeDeviceOnBoard(actionTarget.dataset.deviceId);
+    return;
+  }
+
+  if (action === "remove-device-from-board") {
+    removeDeviceFromBoard(actionTarget.dataset.deviceId);
     return;
   }
 
@@ -1335,26 +1348,26 @@ function handleKeydown(event) {
 }
 
 function resetBoardLayout() {
-  if (!state.schema.devices.length && !state.schema.connections.length) {
+  if (!getBoardDevices().length && !state.schema.connections.length) {
     showToast("Le tableau est déjà vide.");
     return;
   }
 
   const confirmed = window.confirm(
-    "Réinitialiser le tableau va supprimer toutes les liaisons et replacer les appareils sur une grille propre. Continuer ?"
+    "Réinitialiser le tableau va retirer toutes les machines du plateau central et supprimer les liaisons du patch en cours. L'inventaire sera conservé. Continuer ?"
   );
   if (!confirmed) {
     return;
   }
 
   recordHistory();
-  state.schema.devices.forEach((device, index) => {
-    device.position = getDeviceGridPosition(index);
+  state.schema.devices.forEach((device) => {
+    device.onBoard = false;
   });
   state.schema.connections = [];
   state.selectedConnectionId = null;
   cancelConnectionMode({ announce: false });
-  persistSchema("Tableau réinitialisé.");
+  persistSchema("Tableau vidé.");
   centerBoard();
 }
 
@@ -2075,10 +2088,7 @@ function renderDeviceList() {
 
   elements.deviceList.innerHTML = devices
     .map((device) => {
-      const connectionCount = state.schema.connections.filter(
-        (connection) =>
-          connection.source.deviceId === device.id || connection.target.deviceId === device.id
-      ).length;
+      const connectionCount = countDeviceConnections(device.id);
       const isSelected = device.id === state.selectedDeviceId;
       const issueCount = getDeviceDiagnosticCount(device.id);
       const subtitle = [
@@ -2086,6 +2096,7 @@ function renderDeviceList() {
         device.manufacturer,
         device.tags?.length ? `#${device.tags.slice(0, 2).join(" #")}` : "",
         `${device.ports.length} ports`,
+        isDeviceOnBoard(device) ? "sur le tableau" : "hors tableau",
         `${connectionCount} liaisons${issueCount ? ` · ${issueCount} alerte${issueCount > 1 ? "s" : ""}` : ""}`
       ]
         .filter(Boolean)
@@ -2229,6 +2240,7 @@ function instantiateLibraryDevice(libraryId) {
     tags: normalizeTags(entry.tags),
     notes: entry.notes,
     color: entry.color,
+    onBoard: true,
     position: getNextDevicePosition(),
     ports: entry.ports.map((port) => ({
       id: createId("port"),
@@ -2281,9 +2293,10 @@ function renderLegend() {
 }
 
 function renderBoard() {
+  const boardDevices = getBoardDevices();
   elements.board.style.width = `${state.boardSize.width}px`;
   elements.board.style.height = `${state.boardSize.height}px`;
-  elements.emptyState.hidden = state.schema.devices.length > 0;
+  elements.emptyState.hidden = boardDevices.length > 0;
 
   if (state.workspaceView === "graph") {
     elements.connectionsLayer.hidden = true;
@@ -2298,7 +2311,7 @@ function renderBoard() {
   elements.connectionsLayer.style.width = `${state.boardSize.width}px`;
   elements.connectionsLayer.style.height = `${state.boardSize.height}px`;
 
-  elements.board.innerHTML = state.schema.devices
+  elements.board.innerHTML = boardDevices
     .map((device) => {
       const grouped = groupPortsBySide(device.ports);
       const isSelected = device.id === state.selectedDeviceId;
@@ -2342,7 +2355,7 @@ function renderBoard() {
               type="button"
               data-action="delete-device-board"
               data-device-id="${device.id}"
-              aria-label="Supprimer ${escapeAttr(device.name)}"
+              aria-label="Retirer ${escapeAttr(device.name)} du tableau"
             >
               Retirer
             </button>
@@ -2464,16 +2477,18 @@ function renderInspector() {
 
 function renderDiagnostics() {
   const diagnostics = state.diagnostics || { items: [], errors: 0, warnings: 0 };
+  const boardDevices = getBoardDevices();
+  const boardConnections = getBoardConnections();
   const total = diagnostics.items.length;
 
   elements.diagnosticsSummary.innerHTML = `
     <div class="diagnostic-stat">
       <span class="diagnostic-stat__label">Appareils</span>
-      <strong>${state.schema.devices.length}</strong>
+      <strong>${boardDevices.length}</strong>
     </div>
     <div class="diagnostic-stat">
       <span class="diagnostic-stat__label">Liaisons</span>
-      <strong>${state.schema.connections.length}</strong>
+      <strong>${boardConnections.length}</strong>
     </div>
     <div class="diagnostic-stat diagnostic-stat--bad">
       <span class="diagnostic-stat__label">Erreurs</span>
@@ -2663,6 +2678,7 @@ function renderLogicGraph() {
 
 function renderDeviceInspector(device) {
   const selectedPort = getPort(device.id, state.selectedPortId);
+  const deviceOnBoard = isDeviceOnBoard(device);
 
   return `
     <div class="inspector-card" data-help-key="device-details" data-section-id="inspector-device-details">
@@ -2709,7 +2725,11 @@ function renderDeviceInspector(device) {
 
       <div class="route-summary">
         <strong>${device.ports.length} ports</strong>
-        <span>${countDeviceConnections(device.id)} liaisons liées à cet appareil.</span>
+        <span>
+          ${countDeviceConnections(device.id)} liaisons liées · ${
+            deviceOnBoard ? "présent sur le tableau" : "conservé dans l'inventaire"
+          }.
+        </span>
       </div>
 
       <label class="field">
@@ -2728,6 +2748,14 @@ function renderDeviceInspector(device) {
       </label>
 
       <div class="toolbar-inline">
+        <button
+          class="action-button action-button--soft"
+          type="button"
+          data-action="${deviceOnBoard ? "remove-device-from-board" : "place-device-on-board"}"
+          data-device-id="${device.id}"
+        >
+          ${deviceOnBoard ? "Retirer du tableau" : "Ajouter au tableau"}
+        </button>
         <button
           class="action-button action-button--soft"
           type="button"
@@ -2831,7 +2859,7 @@ function renderQuickAddButton(kind) {
 }
 
 function renderPortInspector(device, port) {
-  const isStartable = canStartConnection(port);
+  const isStartable = canStartConnection(port) && isDeviceOnBoard(device);
   const meta = PORT_LIBRARY[port.kind];
 
   return `
@@ -3029,7 +3057,7 @@ function renderConnections() {
     });
   });
 
-  const connectionMarkup = state.schema.connections
+  const connectionMarkup = getBoardConnections()
     .map((connection) => {
       const sourcePort = getPort(connection.source.deviceId, connection.source.portId);
       const targetPort = getPort(connection.target.deviceId, connection.target.portId);
@@ -3158,6 +3186,7 @@ function getStructureSignature() {
       model: device.model || "",
       notes: device.notes || "",
       color: normalizeColor(device.color, pickAccentColor(0)),
+      onBoard: isDeviceOnBoard(device),
       boardView: device.boardView === "compact" ? "compact" : "full",
       tags: normalizeTags(device.tags),
       ports: device.ports.map((port) => ({
@@ -3462,6 +3491,7 @@ function normalizeDevice(device, index) {
     tags: normalizeTags(device?.tags),
     notes: cleanText(device?.notes),
     color: normalizeColor(device?.color, pickAccentColor(index)),
+    onBoard: device?.onBoard !== false,
     boardView: device?.boardView === "compact" ? "compact" : "full",
     position: {
       x: clampNumber(device?.position?.x, 80 + (index % 3) * 360, 32, 2600),
@@ -3519,7 +3549,9 @@ function getLogicGraphBundle() {
 }
 
 function buildLogicGraphBundle() {
-  const nodes = state.schema.devices.map((device) => ({
+  const boardDevices = getBoardDevices();
+  const boardConnections = getBoardConnections();
+  const nodes = boardDevices.map((device) => ({
     id: device.id,
     name: device.name,
     type: normalizeDeviceType(device.type),
@@ -3527,10 +3559,10 @@ function buildLogicGraphBundle() {
     subtitle: composeDeviceSubtitle(device),
     portCount: device.ports.length
   }));
-  const deviceMap = new Map(state.schema.devices.map((device) => [device.id, device]));
+  const deviceMap = new Map(boardDevices.map((device) => [device.id, device]));
   const edgeGroups = new Map();
 
-  state.schema.connections.forEach((connection) => {
+  boardConnections.forEach((connection) => {
     const sourceDevice = deviceMap.get(connection.source.deviceId);
     const targetDevice = deviceMap.get(connection.target.deviceId);
     if (!sourceDevice || !targetDevice) {
@@ -3818,6 +3850,7 @@ function buildLogicGraphEdgeGeometry(source, target) {
 }
 
 function updateBoardSize() {
+  const boardDevices = getBoardDevices();
   const wrapperWidth = elements.boardWrapper.clientWidth || 1100;
   const wrapperHeight = elements.boardWrapper.clientHeight || 760;
   if (state.workspaceView === "graph") {
@@ -3829,8 +3862,8 @@ function updateBoardSize() {
     return;
   }
 
-  const maxX = state.schema.devices.reduce((acc, device) => Math.max(acc, device.position.x + 360), 1200);
-  const maxY = state.schema.devices.reduce((acc, device) => Math.max(acc, device.position.y + 260), 840);
+  const maxX = boardDevices.reduce((acc, device) => Math.max(acc, device.position.x + 360), 1200);
+  const maxY = boardDevices.reduce((acc, device) => Math.max(acc, device.position.y + 260), 840);
 
   state.boardSize = {
     width: Math.max(wrapperWidth + 340, maxX + 180),
@@ -3851,7 +3884,7 @@ function centerBoard(animate = true) {
 
 function focusDeviceOnBoard(deviceId, animate = true) {
   const device = getDevice(deviceId);
-  if (!device) {
+  if (!device || !isDeviceOnBoard(device)) {
     return;
   }
 
@@ -3889,14 +3922,15 @@ function focusDeviceInActiveView(deviceId, animate = true) {
 }
 
 function getSchemaBounds() {
-  if (!state.schema.devices.length) {
+  const boardDevices = getBoardDevices();
+  if (!boardDevices.length) {
     return {
       centerX: state.boardSize.width / 2,
       centerY: state.boardSize.height / 2
     };
   }
 
-  const positions = state.schema.devices.map((device) => ({
+  const positions = boardDevices.map((device) => ({
     minX: device.position.x,
     minY: device.position.y,
     maxX: device.position.x + 320,
@@ -4076,11 +4110,13 @@ function buildDiagnosticsReport() {
     warnings: 0,
     deviceCounts: {}
   };
+  const boardDevices = getBoardDevices();
+  const boardConnections = getBoardConnections();
   const portUseCounts = new Map();
-  const deviceConnectionCounts = new Map(state.schema.devices.map((device) => [device.id, 0]));
+  const deviceConnectionCounts = new Map(boardDevices.map((device) => [device.id, 0]));
   const deviceNames = new Map();
 
-  state.schema.connections.forEach((connection) => {
+  boardConnections.forEach((connection) => {
     const sourceDevice = getDevice(connection.source.deviceId);
     const targetDevice = getDevice(connection.target.deviceId);
 
@@ -4103,7 +4139,7 @@ function buildDiagnosticsReport() {
     portUseCounts.set(targetKey, (portUseCounts.get(targetKey) || 0) + 1);
   });
 
-  state.schema.devices.forEach((device) => {
+  boardDevices.forEach((device) => {
     const normalizedName = cleanText(device.name).toLowerCase();
     if (normalizedName) {
       if (!deviceNames.has(normalizedName)) {
@@ -4203,7 +4239,7 @@ function buildDiagnosticsReport() {
     });
   });
 
-  state.schema.connections.forEach((connection) => {
+  boardConnections.forEach((connection) => {
     const sourcePort = getPort(connection.source.deviceId, connection.source.portId);
     const targetPort = getPort(connection.target.deviceId, connection.target.portId);
     const problem = getConnectionProblem(connection, sourcePort, targetPort);
@@ -4224,7 +4260,7 @@ function buildDiagnosticsReport() {
   });
 
   const inputsMap = new Map();
-  state.schema.connections.forEach((connection) => {
+  boardConnections.forEach((connection) => {
     const targetPort = getPort(connection.target.deviceId, connection.target.portId);
     if (!targetPort) {
       return;
@@ -4269,7 +4305,7 @@ function buildDiagnosticsReport() {
   });
 
   const usbPairs = new Map();
-  state.schema.connections.forEach((connection) => {
+  boardConnections.forEach((connection) => {
     const sourcePort = getPort(connection.source.deviceId, connection.source.portId);
     const targetPort = getPort(connection.target.deviceId, connection.target.portId);
     if (!sourcePort || !targetPort) {
@@ -4370,11 +4406,13 @@ function getSelectionLabel() {
 }
 
 function buildShareSummary() {
+  const boardDevices = getBoardDevices();
+  const boardConnections = getBoardConnections();
   return [
     `${state.schema.meta.title || APP_NAME}`,
     state.schema.meta.description || DEFAULT_SCHEMA_DESCRIPTION,
-    `${state.schema.devices.length} appareils`,
-    `${state.schema.connections.length} liaisons`
+    `${boardDevices.length} appareils`,
+    `${boardConnections.length} liaisons`
   ].join(" · ");
 }
 
@@ -4496,7 +4534,7 @@ function buildCurvePath(sourcePoint, targetPoint) {
 }
 
 function countDeviceConnections(deviceId) {
-  return state.schema.connections.filter(
+  return getBoardConnections().filter(
     (connection) =>
       connection.source.deviceId === deviceId || connection.target.deviceId === deviceId
   ).length;
@@ -4515,7 +4553,7 @@ function composeDeviceSubtitle(device) {
 }
 
 function getNextDevicePosition() {
-  return getDeviceGridPosition(state.schema.devices.length);
+  return getDeviceGridPosition(getBoardDevices().length);
 }
 
 function getDeviceGridPosition(index) {
@@ -4536,6 +4574,62 @@ function getPort(deviceId, portId) {
 
 function getConnection(connectionId) {
   return state.schema.connections.find((connection) => connection.id === connectionId) || null;
+}
+
+function isDeviceOnBoard(device) {
+  return device?.onBoard !== false;
+}
+
+function getBoardDevices() {
+  return state.schema.devices.filter((device) => isDeviceOnBoard(device));
+}
+
+function getBoardConnections() {
+  const boardDeviceIds = new Set(getBoardDevices().map((device) => device.id));
+  return state.schema.connections.filter(
+    (connection) =>
+      boardDeviceIds.has(connection.source.deviceId) &&
+      boardDeviceIds.has(connection.target.deviceId)
+  );
+}
+
+function placeDeviceOnBoard(deviceId) {
+  const device = getDevice(deviceId);
+  if (!device || isDeviceOnBoard(device)) {
+    return;
+  }
+
+  recordHistory();
+  device.position = getDeviceGridPosition(getBoardDevices().length);
+  device.onBoard = true;
+  state.selectedDeviceId = device.id;
+  state.selectedPortId = null;
+  state.selectedConnectionId = null;
+  state.helpKey = "device-details";
+  persistSchema(`Appareil "${device.name}" ajouté au tableau.`);
+  setWorkspaceView("board");
+  window.requestAnimationFrame(() => focusDeviceOnBoard(device.id));
+}
+
+function removeDeviceFromBoard(deviceId) {
+  const device = getDevice(deviceId);
+  if (!device || !isDeviceOnBoard(device)) {
+    return;
+  }
+
+  recordHistory();
+  device.onBoard = false;
+  state.schema.connections = state.schema.connections.filter(
+    (connection) =>
+      connection.source.deviceId !== deviceId && connection.target.deviceId !== deviceId
+  );
+  state.selectedConnectionId = null;
+  if (state.connectFrom?.deviceId === deviceId) {
+    cancelConnectionMode({ announce: false });
+  }
+  state.helpKey = "device-details";
+  persistSchema(`Appareil "${device.name}" retiré du tableau.`);
+  centerBoard();
 }
 
 function createEmptySchema() {

@@ -2,27 +2,27 @@
 
 ## Objectif
 
-Construire une webapp open source, simple a publier sur GitHub, permettant de:
+Construire une webapp open source, simple à publier sur GitHub, permettant de:
 
-- creer des appareils personnalises
-- definir leurs entrees et sorties `Audio`, `MIDI`, `Gate / Trig`, `CV`, `Clock`, `USB`
+- créer des appareils personnalisés
+- définir leurs entrées et sorties `Audio`, `MIDI`, `Gate / Trig`, `CV`, `Clock`, `USB`
 - documenter les canaux MIDI
 - relier visuellement les machines entre elles
-- sauvegarder, charger, partager et imprimer des schemas
-- reutiliser des appareils a travers une bibliotheque locale
+- sauvegarder, charger, partager et imprimer des schémas
+- réutiliser des appareils à travers une bibliothèque locale
 
-## Etat actuel
+## État actuel
 
-Le projet est aujourd'hui un MVP avance et deja exploitable:
+Le projet est aujourd'hui un MVP avancé et déjà exploitable:
 
 - application statique sans backend
 - sauvegarde locale automatique
 - import/export JSON
-- routage a la souris entre ports compatibles
+- routage à la souris entre ports compatibles
 - diagnostic structurel du patch
 - vue physique et vue logique
 
-Le socle technique actuel reste pertinent. Il n'y a pas de raison de reecrire le projet dans une autre technologie a ce stade.
+Le socle technique actuel reste pertinent. Il n'y a pas de raison de réécrire le projet dans une autre technologie à ce stade.
 
 ## Fichiers principaux
 
@@ -40,128 +40,129 @@ Le socle technique actuel reste pertinent. Il n'y a pas de raison de reecrire le
 
 ### Produit
 
-- titre de projet et description du schema
+- titre de projet et description du schéma
 - interface responsive avec panneau gauche, zone centrale et panneau droit
-- sections repliables pour accelerer la navigation
-- aide contextuelle integree
+- sections repliables pour accélérer la navigation
+- aide contextuelle intégrée
 
-### Appareils et bibliotheque
+### Appareils, inventaire et bibliothèque
 
-- creation, duplication, suppression et edition d'appareils
-- typologie d'appareils avec icones de reperage
+- création, duplication, suppression et édition d'appareils
+- typologie d'appareils avec icônes de repérage
 - tags d'appareils pour classification et filtres rapides
-- inventaire des appareils du schema courant
-- bibliotheque locale d'appareils reutilisables
-- export/import JSON de la bibliotheque
-- placement et recentrage des appareils dans le tableau
-- filtres texte et type dans l'inventaire et la bibliotheque
-- gabarits integres pour partir d'un setup live, studio hybride ou modulaire
+- inventaire des appareils du schéma courant
+- séparation entre présence dans l'inventaire et présence sur le tableau
+- bibliothèque locale d'appareils réutilisables
+- export/import JSON de la bibliothèque
+- import de bibliothèque non destructif avec enrichissement de l'existant
+- signalement et mise à jour des doublons évidents
+- filtres texte et type dans l'inventaire et la bibliothèque
+- gabarits intégrés pour partir d'un setup live, studio hybride ou modulaire
 
 ### Ports et routage
 
 - support des types `Audio`, `MIDI`, `Gate / Trig`, `CV`, `Clock`, `USB`
-- differenciation visuelle entree / sortie par nuance claire / foncee
+- différenciation visuelle entrée / sortie par nuance claire / foncée
 - canaux MIDI configurables
-- liaisons a la souris entre ports compatibles uniquement
-- mise en surbrillance des destinations eligibles
-- appareils reductibles ou developpes dans le tableau
+- liaisons à la souris entre ports compatibles uniquement
+- mise en surbrillance des destinations éligibles
+- appareils réductibles ou développés dans le tableau
 
-### Diagnostics et lisibilite
+### Diagnostics et lisibilité
 
 - panneau `Analyse du patch`
-- detection des liaisons incompatibles, incomplètes ou incoherentes
-- detection des conflits de sources sur une meme entree
-- detection des canaux MIDI incompatibles
-- detection des appareils isoles, ports inutilises et doublons USB
-- vue `Graphe` pour lire la logique du schema
-- mise en avant des chemins lies a la selection
+- détection des liaisons incompatibles, incomplètes ou incohérentes
+- détection des conflits de sources sur une même entrée
+- détection des canaux MIDI incompatibles
+- détection des appareils isolés, ports inutilisés et doublons USB
+- vue `Graphe` pour lire la logique du schéma
+- mise en avant des chemins liés à la sélection
 
 ### Persistance et sorties
 
 - sauvegarde automatique via `localStorage`
-- export/import du schema en `JSON`
-- export/import de la bibliotheque en `JSON`
-- format JSON documente et versionne
+- export/import du schéma en `JSON`
+- export/import de la bibliothèque en `JSON`
+- format JSON documenté et versionné
 - impression papier / PDF
 - partage via les API navigateur disponibles
-- exemple de schema fourni
+- exemple de schéma fourni
 
 ### Ergonomie
 
-- `Annuler` / `Retablir`
+- `Annuler` / `Rétablir`
 - raccourcis `Cmd/Ctrl + Z` et `Cmd/Ctrl + Shift + Z`
-- `Reinitialiser le tableau`
-- `Reinitialiser l'inventaire`
-- dark mode automatique selon le systeme
+- `Réinitialiser le tableau`
+- `Réinitialiser l'inventaire`
+- dark mode automatique selon le système
 
-## Ameliorations majeures deja ajoutees
+## Améliorations majeures déjà ajoutées
 
-Les dernieres iterations ont surtout renforce la robustesse et la lecture du patch:
+Les dernières itérations ont surtout renforcé la robustesse et la lecture du patch:
 
-- correction de la geometrie des cables dans la zone scrollable
-- conservation des liaisons importees invalides afin qu'elles apparaissent dans les diagnostics
+- correction de la géométrie des câbles dans la zone scrollable
+- conservation des liaisons importées invalides afin qu'elles apparaissent dans les diagnostics
 - ajout d'une vraie vue `Graphe`
 - ajout d'un cache simple pour limiter certains recalculs de diagnostic et de rendu logique
-- correction du cache de la vue graphe pour inclure les attributs visuels utiles
-- troncature des libelles longs dans la vue graphe
-- blocage des doublons USB inverses
-- harmonisation des doublons de bibliotheque entre sauvegarde manuelle et import
+- harmonisation des doublons de bibliothèque entre sauvegarde manuelle et import
 - clarification du nom produit `Routage Studio`
-- documentation du format JSON du schema et de la bibliotheque
+- documentation du format JSON du schéma et de la bibliothèque
+- séparation explicite entre inventaire du schéma et tableau central
+- réinitialisation du tableau recentrée sur le patch visuel sans vider l'inventaire
 
-## Ce qu'il reste a valider
+## Ce qu'il reste à valider
 
 ### Recette navigateur
 
-- verifier visuellement les liaisons sur plusieurs tailles de fenetre
-- tester le mode reduit / agrandi sur des schemas charges
-- confirmer que les surbrillances de ports restent evidentes sur des patches denses
-- tester l'impression sur un schema simple et un schema complexe
+- vérifier visuellement les liaisons sur plusieurs tailles de fenêtre
+- tester le mode réduit / agrandi sur des schémas chargés
+- confirmer que les surbrillances de ports restent évidentes sur des patches denses
+- tester l'impression sur un schéma simple et un schéma complexe
 - tester le partage sur navigateurs compatibles
 
 ### Validation fonctionnelle
 
-- revalider `Annuler / Retablir` sur les actions critiques
-- verifier les resets sur des schemas volumineux
-- tester les imports JSON volontairement incomplets ou errones
-- verifier les alertes MIDI sur differents cas de canaux
-- tester la bibliotheque sur une session longue avec plusieurs appareils
+- revalider `Annuler / Rétablir` sur les actions critiques
+- vérifier les resets sur des schémas volumineux
+- tester les imports JSON volontairement incomplets ou erronés
+- vérifier les alertes MIDI sur différents cas de canaux
+- tester la bibliothèque sur une session longue avec plusieurs appareils
 
 ## Roadmap
 
-La roadmap detaillee et l'audit priorise sont maintenant dans [ROADMAP.md](ROADMAP.md).
+La roadmap détaillée et l'audit priorisé sont maintenant dans [ROADMAP.md](ROADMAP.md).
 
-Resume rapide:
+Résumé rapide:
 
-### Priorite 1
+### Priorité 1
 
-- faire une recette UX complete dans le navigateur
-- lisser les derniers details visuels et d'espacement
+- faire une recette UX complète dans le navigateur
+- lisser les derniers détails visuels et d'espacement
 - durcir encore les tests manuels autour des liaisons et des diagnostics
-- ameliorer les messages d'aide sur les actions les moins evidentes
+- améliorer les messages d'aide sur les actions les moins évidentes
 
-### Priorite 2
+### Priorité 2
 
 - enrichir les diagnostics avec davantage de conseils de correction
-- ameliorer la mise en page d'impression
+- améliorer la mise en page d'impression
 
-### Priorite 3
+### Priorité 3
 
 - permettre la duplication rapide de groupes de ports
-- preparer une publication GitHub Pages prete a l'emploi
+- préparer une publication GitHub Pages prête à l'emploi
 
-### Priorite 4
+### Priorité 4
 
-- ajouter des tests automatises navigateur pour limiter les regressions
-- etudier un mode multi-projets plus structure
-- envisager a terme un export/import plus riche des bibliotheques et presets
+- ajouter des tests automatisés navigateur pour limiter les régressions
+- étudier un mode multi-projets plus structuré
+- envisager à terme un export/import plus riche des bibliothèques et presets
 
 ## Points de vigilance
 
-- la sauvegarde locale et la bibliotheque dependent du navigateur et du poste utilises
-- une vraie campagne de test visuelle reste necessaire apres les gros changements UX
-- l'application est volontairement legere et sans backend, ce qui simplifie le deploiement mais limite la synchronisation native
+- la sauvegarde locale et la bibliothèque dépendent du navigateur et du poste utilisés
+- une vraie campagne de test visuelle reste nécessaire après les gros changements UX
+- l'application est volontairement légère et sans backend, ce qui simplifie le déploiement mais limite la synchronisation native
 
-## Prochaine etape recommandee
+## Prochaine étape recommandée
 
-Faire une passe de test reel dans le navigateur avec plusieurs cas concrets de patch, en particulier sur les nouveaux filtres, gabarits, le dark mode et l'impression, puis ajuster les derniers details d'ergonomie avant publication sur GitHub.
+Faire une passe de test réelle dans le navigateur avec plusieurs cas concrets de patch, en particulier sur les nouveaux resets, les filtres, les gabarits, le dark mode et l'impression, puis ajuster les derniers détails d'ergonomie avant publication sur GitHub.

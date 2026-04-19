@@ -2,19 +2,19 @@
 
 ## But
 
-Ce document formalise le format JSON exporte par Routage Studio pour:
+Ce document formalise le format JSON exporté par Routage Studio pour:
 
-- les schemas de routage
-- la bibliotheque d'instruments
+- les schémas de routage
+- la bibliothèque d'instruments
 
-Le format actuel est compatible avec les anciens exports plus simples: les champs absents sont normalises a l'import.
+Le format actuel reste compatible avec les anciens exports plus simples: les champs absents sont normalisés à l'import.
 
 ## Version actuelle
 
-- schema: `type = "routage-studio-schema"`, `version = 2`
-- bibliotheque: `type = "routage-studio-library"`, `version = 2`
+- schéma: `type = "routage-studio-schema"`, `version = 2`
+- bibliothèque: `type = "routage-studio-library"`, `version = 2`
 
-## Schema de routage
+## Schéma de routage
 
 Structure racine:
 
@@ -37,8 +37,8 @@ Structure racine:
 
 - `title`: titre visible dans l'application, l'onglet navigateur et les exports
 - `description`: sous-titre descriptif
-- `createdAt`: date ISO de creation
-- `updatedAt`: date ISO de derniere modification
+- `createdAt`: date ISO de création
+- `updatedAt`: date ISO de dernière modification
 
 ### `devices`
 
@@ -54,6 +54,7 @@ Chaque appareil suit cette forme:
   "tags": ["lead", "live"],
   "notes": "Voix principale",
   "color": "#2f6fd0",
+  "onBoard": true,
   "boardView": "full",
   "position": {
     "x": 120,
@@ -67,16 +68,22 @@ Champs importants:
 
 - `id`: identifiant unique
 - `name`: nom de l'appareil
-- `type`: type normalise d'appareil
+- `type`: type normalisé d'appareil
 - `manufacturer`: marque, famille ou constructeur
-- `model`: modele, role ou sous-intitule
-- `tags`: liste libre de mots-clefs pour filtrage et organisation
+- `model`: modèle, rôle ou sous-intitulé
+- `tags`: liste libre de mots-clés pour filtrage et organisation
 - `notes`: description libre
-- `color`: couleur hexadecimale `#RRGGBB`
+- `color`: couleur hexadécimale `#RRGGBB`
+- `onBoard`: `true` si l'appareil est actuellement présent sur le tableau central, `false` s'il reste seulement dans l'inventaire
 - `boardView`: `full` ou `compact`
-- `position`: coordonnees du tableau visuel
+- `position`: coordonnées du tableau visuel
 
-### Types d'appareil supportes
+Remarques:
+
+- un appareil peut rester dans l'inventaire avec `onBoard = false`
+- `Réinitialiser le tableau` met les appareils hors tableau et supprime les liaisons, sans vider l'inventaire
+
+### Types d'appareil supportés
 
 - `other`
 - `synth`
@@ -111,13 +118,13 @@ Chaque port suit cette forme:
 }
 ```
 
-Regles:
+Règles:
 
-- `kind` doit appartenir a la liste de ports supportes
+- `kind` doit appartenir à la liste de ports supportés
 - `midiChannel` vaut `null` pour les ports non MIDI
-- `midiChannel` vaut `all` ou `1` a `16` pour les ports MIDI
+- `midiChannel` vaut `all` ou `1` à `16` pour les ports MIDI
 
-Ports supportes:
+Ports supportés:
 
 - `audio-in`
 - `audio-out`
@@ -148,18 +155,18 @@ Chaque liaison suit cette forme:
     "portId": "port-b"
   },
   "label": "Main L",
-  "notes": "Retour facade",
+  "notes": "Retour façade",
   "midiChannel": "inherit"
 }
 ```
 
-Regles:
+Règles:
 
 - `source` et `target` pointent vers des appareils et ports existants
 - `midiChannel` vaut `null` pour les liaisons non MIDI
-- `midiChannel` vaut `inherit`, `all` ou `1` a `16` pour les liaisons MIDI
+- `midiChannel` vaut `inherit`, `all` ou `1` à `16` pour les liaisons MIDI
 
-## Bibliotheque d'instruments
+## Bibliothèque d'instruments
 
 Structure racine:
 
@@ -173,7 +180,7 @@ Structure racine:
 }
 ```
 
-Chaque element de `items` reprend la structure d'un appareil reutilisable, sans `position`, sans `boardView` et sans `connections`.
+Chaque élément de `items` reprend la structure d'un appareil réutilisable, sans `position`, sans `onBoard`, sans `boardView` et sans `connections`.
 
 Exemple:
 
@@ -185,25 +192,32 @@ Exemple:
   "manufacturer": "Roland",
   "model": "Classic drum machine",
   "tags": ["drums", "clock"],
-  "notes": "Modele de bibliotheque",
+  "notes": "Modèle de bibliothèque",
   "color": "#d14124",
   "ports": []
 }
 ```
 
-## Normalisation a l'import
+## Gestion des doublons de bibliothèque
+
+- l'ajout manuel d'un appareil déjà connu demande confirmation avant remplacement
+- l'import fusionne avec la bibliothèque locale existante
+- les doublons évidents sont détectés sur l'identité de l'appareil et mis à jour proprement
+
+## Normalisation à l'import
 
 L'application normalise automatiquement:
 
-- les anciens schemas sans champ `type`
+- les anciens schémas sans champ `type`
 - les anciennes versions sans `tags`
 - les couleurs invalides
 - les types d'appareils inconnus
 - les canaux MIDI invalides
-- certaines listes de bibliotheque anciennes exportees sans enveloppe racine
+- l'absence du champ `onBoard`, qui est alors interprétée comme `true`
+- certaines listes de bibliothèque anciennes exportées sans enveloppe racine
 
-## Compatibilite
+## Compatibilité
 
 - les exports plus anciens restent lisibles
-- les nouveaux exports ajoutent surtout `type`, `version = 2` et `tags`
-- la sauvegarde locale historique reste preservee, meme si ses cles `localStorage` gardent leur ancien nom interne
+- les nouveaux exports ajoutent notamment `onBoard` pour distinguer inventaire et tableau
+- la sauvegarde locale historique reste préservée, même si ses clés `localStorage` gardent leur ancien nom interne
