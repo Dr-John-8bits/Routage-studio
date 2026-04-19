@@ -47,7 +47,11 @@ Depuis l'inventaire, vous pouvez:
 - le dupliquer
 - le supprimer
 - l'ajouter au tableau central
+- le retirer du tableau sans le supprimer du schéma
+- le cadrer rapidement sur le plateau central s'il y est déjà
 - l'enregistrer dans la bibliothèque
+
+Le bouton `Tout remettre` remet d'un coup tous les appareils actuellement hors tableau sur le plateau central.
 
 ### Tableau
 
@@ -119,6 +123,12 @@ L'inventaire du schéma et la bibliothèque disposent:
 
 - d'un champ de recherche texte
 - d'un filtre par type d'appareil
+
+En plus, l'inventaire dispose d'un filtre d'emplacement:
+
+- `Tous`
+- `Sur le tableau`
+- `Hors tableau`
 
 La recherche couvre:
 

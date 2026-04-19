@@ -52,6 +52,9 @@ Le socle technique actuel reste pertinent. Il n'y a pas de raison de réécrire 
 - tags d'appareils pour classification et filtres rapides
 - inventaire des appareils du schéma courant
 - séparation entre présence dans l'inventaire et présence sur le tableau
+- filtre d'emplacement dans l'inventaire pour isoler le tableau courant ou les appareils hors plateau
+- actions rapides dans l'inventaire pour ajouter, retirer ou cadrer un appareil
+- action globale `Tout remettre` pour réinjecter les appareils hors tableau
 - bibliothèque locale d'appareils réutilisables
 - export/import JSON de la bibliothèque
 - import de bibliothèque non destructif avec enrichissement de l'existant

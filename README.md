@@ -35,8 +35,11 @@ L'application fonctionne sans backend ni compilation. Elle est pensée pour êtr
 - canal MIDI configurable sur les ports et pris en compte dans l'analyse des liaisons
 - couleurs distinctes par famille d'I/O avec nuance différente pour entrée et sortie
 - tags d'appareils pour classer les instruments par usage ou rôle
-- recherche texte et filtre de type dans l'inventaire et la bibliothèque
+- recherche texte, filtre de type et filtre d'emplacement dans l'inventaire
+- recherche texte et filtre de type dans la bibliothèque
 - appareils réductibles ou développés dans le tableau visuel
+- actions rapides dans l'inventaire pour ajouter, retirer ou cadrer un appareil sur le tableau
+- action `Tout remettre` dans l'inventaire pour réinjecter rapidement tous les appareils hors tableau
 - boutons `Annuler`, `Rétablir`, `Réinitialiser le tableau`, `Réinitialiser l'inventaire`
 - sections repliables pour accélérer la navigation dans l'interface
 

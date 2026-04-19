@@ -396,17 +396,18 @@ const HELP_CONTENT = {
     body:
       "Cette liste centralise toutes les machines du schéma. Elle sert à passer vite d'un appareil à un autre sans chercher sur le tableau.",
     tips: [
-      "Le compteur affiche le nombre total d'appareils.",
-      "Chaque ligne indique aussi le nombre de ports et de liaisons liées à l'appareil."
+      "Le compteur compare le total d'appareils avec ceux actuellement présents sur le tableau.",
+      "Chaque ligne donne accès à des actions rapides pour ajouter, retirer ou cadrer un appareil."
     ]
   },
   "inventory-filters": {
     title: "Filtres d'inventaire",
     body:
-      "La recherche et le filtre de type servent à retrouver vite un appareil dans les setups chargés, même quand la liste devient longue.",
+      "La recherche, le filtre de type et le filtre d'emplacement servent à retrouver vite un appareil dans les setups chargés, même quand la liste devient longue.",
     tips: [
       "La recherche regarde le nom, la marque, le modèle, les tags, les notes et les noms de ports.",
-      "Le filtre de type permet par exemple d'isoler seulement les synthés ou les interfaces."
+      "Le filtre de type permet par exemple d'isoler seulement les synthés ou les interfaces.",
+      "Le filtre d'emplacement permet de n'afficher que les appareils déjà posés sur le tableau ou gardés dans l'inventaire."
     ]
   },
   "device-library": {
@@ -416,7 +417,7 @@ const HELP_CONTENT = {
     tips: [
       "La bibliothèque est sauvegardée localement dans le navigateur.",
       "Tu peux aussi la sauvegarder en JSON puis la recharger sur un autre poste.",
-      "Utiliser ajoute une nouvelle instance de l'appareil dans le schéma courant."
+      "Ajouter au patch crée une nouvelle instance de l'appareil dans le schéma courant."
     ]
   },
   "export-library": {
@@ -604,9 +605,11 @@ const elements = {
   newDeviceColor: document.querySelector("#newDeviceColor"),
   newDeviceNotes: document.querySelector("#newDeviceNotes"),
   templateList: document.querySelector("#templateList"),
+  restoreBoardBtn: document.querySelector("#restoreBoardBtn"),
   deviceCountBadge: document.querySelector("#deviceCountBadge"),
   deviceSearchInput: document.querySelector("#deviceSearchInput"),
   deviceTypeFilter: document.querySelector("#deviceTypeFilter"),
+  deviceBoardFilter: document.querySelector("#deviceBoardFilter"),
   deviceFilterSummary: document.querySelector("#deviceFilterSummary"),
   deviceList: document.querySelector("#deviceList"),
   librarySearchInput: document.querySelector("#librarySearchInput"),
@@ -628,6 +631,8 @@ const elements = {
   resetBoardBtn: document.querySelector("#resetBoardBtn"),
   resetInventoryBtn: document.querySelector("#resetInventoryBtn"),
   emptyState: document.querySelector("#emptyState"),
+  emptyStateTitle: document.querySelector("#emptyStateTitle"),
+  emptyStateCopy: document.querySelector("#emptyStateCopy"),
   emptyAddDeviceBtn: document.querySelector("#emptyAddDeviceBtn"),
   inspectorPanel: document.querySelector("#inspectorPanel"),
   helpTitle: document.querySelector("#helpTitle"),
@@ -657,6 +662,7 @@ const state = {
   filters: {
     inventoryQuery: "",
     inventoryType: "all",
+    inventoryPlacement: "all",
     libraryQuery: "",
     libraryType: "all"
   },
@@ -707,6 +713,10 @@ function hydrateStaticFields() {
     elements.deviceTypeFilter.innerHTML = renderDeviceTypeFilterOptionsMarkup("all");
     elements.deviceTypeFilter.value = "all";
   }
+  if (elements.deviceBoardFilter) {
+    elements.deviceBoardFilter.innerHTML = renderInventoryPlacementFilterOptionsMarkup("all");
+    elements.deviceBoardFilter.value = "all";
+  }
   if (elements.libraryTypeFilter) {
     elements.libraryTypeFilter.innerHTML = renderDeviceTypeFilterOptionsMarkup("all");
     elements.libraryTypeFilter.value = "all";
@@ -745,6 +755,7 @@ function attachEvents() {
     renderHelp();
   });
   elements.addDeviceForm.addEventListener("submit", handleAddDevice);
+  elements.restoreBoardBtn.addEventListener("click", restoreInventoryToBoard);
   elements.templateList.addEventListener("click", handleTemplateListClick);
   elements.fileInput.addEventListener("change", handleImportFile);
   elements.libraryFileInput.addEventListener("change", handleLibraryImportFile);
@@ -752,6 +763,7 @@ function attachEvents() {
   elements.schemaDescriptionInput.addEventListener("change", handleProjectMetaChange);
   elements.deviceSearchInput.addEventListener("input", handleFilterInput);
   elements.deviceTypeFilter.addEventListener("change", handleFilterInput);
+  elements.deviceBoardFilter.addEventListener("change", handleFilterInput);
   elements.librarySearchInput.addEventListener("input", handleFilterInput);
   elements.libraryTypeFilter.addEventListener("change", handleFilterInput);
   elements.cancelConnectBtn.addEventListener("click", () => cancelConnectionMode());
@@ -762,11 +774,7 @@ function attachEvents() {
   elements.redoBtn.addEventListener("click", redoHistory);
   elements.resetBoardBtn.addEventListener("click", resetBoardLayout);
   elements.resetInventoryBtn.addEventListener("click", resetInventory);
-  elements.emptyAddDeviceBtn.addEventListener("click", () => {
-    elements.newDeviceName.focus();
-    state.helpKey = "device-form";
-    renderHelp();
-  });
+  elements.emptyAddDeviceBtn.addEventListener("click", handleEmptyStatePrimaryAction);
 
   elements.board.addEventListener("click", handleBoardClick);
   elements.board.addEventListener("pointerdown", handleBoardPointerDown);
@@ -969,6 +977,11 @@ function handleFilterInput(event) {
   }
   if (target === elements.deviceTypeFilter) {
     state.filters.inventoryType = target.value;
+    renderDeviceList();
+    return;
+  }
+  if (target === elements.deviceBoardFilter) {
+    state.filters.inventoryPlacement = target.value;
     renderDeviceList();
     return;
   }
@@ -1229,6 +1242,24 @@ function handleInspectorChange(event) {
 }
 
 function handleDeviceListClick(event) {
+  const focusButton = event.target.closest("[data-action='focus-device-on-board']");
+  if (focusButton) {
+    focusDeviceFromInventory(focusButton.dataset.deviceId);
+    return;
+  }
+
+  const placeButton = event.target.closest("[data-action='place-device-on-board']");
+  if (placeButton) {
+    placeDeviceOnBoard(placeButton.dataset.deviceId);
+    return;
+  }
+
+  const removeButton = event.target.closest("[data-action='remove-device-from-board']");
+  if (removeButton) {
+    removeDeviceFromBoard(removeButton.dataset.deviceId);
+    return;
+  }
+
   const button = event.target.closest("[data-action='select-device']");
   if (!button) {
     return;
@@ -1392,6 +1423,28 @@ function resetInventory() {
   state.selectedConnectionId = null;
   cancelConnectionMode({ announce: false });
   persistSchema("Inventaire réinitialisé.");
+}
+
+function handleEmptyStatePrimaryAction() {
+  const totalDevices = state.schema.devices.length;
+  const boardDevices = getBoardDevices().length;
+
+  if (totalDevices > 0 && boardDevices === 0) {
+    const candidate = state.schema.devices.find((device) => !isDeviceOnBoard(device)) || state.schema.devices[0];
+    if (candidate) {
+      selectDevice(candidate.id);
+      state.helpKey = "device-list";
+      render();
+      return;
+    }
+
+    elements.deviceSearchInput?.focus();
+    return;
+  }
+
+  elements.newDeviceName.focus();
+  state.helpKey = "device-form";
+  renderHelp();
 }
 
 function handleHelpTracking(event) {
@@ -1931,7 +1984,20 @@ function renderProjectMeta() {
 }
 
 function renderStatus() {
-  elements.deviceCountBadge.textContent = String(state.schema.devices.length);
+  const totalDevices = state.schema.devices.length;
+  const boardDevices = getBoardDevices().length;
+  const offBoardDevices = totalDevices - boardDevices;
+  elements.deviceCountBadge.textContent =
+    boardDevices === totalDevices ? String(totalDevices) : `${boardDevices}/${totalDevices}`;
+  elements.deviceCountBadge.title =
+    totalDevices === 0
+      ? "Aucun appareil dans le schéma."
+      : `${boardDevices} sur le tableau · ${offBoardDevices} dans l'inventaire.`;
+  elements.restoreBoardBtn.disabled = offBoardDevices === 0;
+  elements.restoreBoardBtn.title =
+    offBoardDevices === 0
+      ? "Tous les appareils sont déjà sur le tableau."
+      : `Ajouter les ${offBoardDevices} appareil${offBoardDevices > 1 ? "s" : ""} actuellement hors tableau.`;
   elements.undoBtn.disabled = !canUndoHistory();
   elements.redoBtn.disabled = !canRedoHistory();
   elements.cancelConnectBtn.disabled = !state.connectFrom;
@@ -1951,7 +2017,9 @@ function renderStatus() {
   } else {
     elements.boardHint.textContent = state.connectFrom
       ? "Liaison en cours: les entrées compatibles sont surlignées. Clique sur l'une d'elles ou clique dans le vide pour annuler."
-      : "Pour relier deux machines, clique sur une sortie comme MIDI Out, puis sur l'entrée compatible comme MIDI In.";
+      : boardDevices === 0 && totalDevices > 0
+        ? "Le tableau est vide. Réajoute des appareils depuis l'inventaire pour reconstruire le patch."
+        : "Pour relier deux machines, clique sur une sortie comme MIDI Out, puis sur l'entrée compatible comme MIDI In.";
   }
 
   const selectionLabel = getSelectionLabel();
@@ -1995,7 +2063,12 @@ function renderTemplateList() {
 
 function getFilteredDevices() {
   return state.schema.devices.filter((device) =>
-    matchesDeviceFilters(device, state.filters.inventoryQuery, state.filters.inventoryType)
+    matchesInventoryFilters(
+      device,
+      state.filters.inventoryQuery,
+      state.filters.inventoryType,
+      state.filters.inventoryPlacement
+    )
   );
 }
 
@@ -2017,6 +2090,21 @@ function matchesDeviceFilters(entry, query, typeFilter) {
   }
 
   return buildDeviceSearchText(entry).includes(normalizedQuery);
+}
+
+function matchesInventoryFilters(entry, query, typeFilter, placementFilter) {
+  if (!matchesDeviceFilters(entry, query, typeFilter)) {
+    return false;
+  }
+
+  const normalizedPlacement = placementFilter || "all";
+  if (normalizedPlacement === "board") {
+    return isDeviceOnBoard(entry);
+  }
+  if (normalizedPlacement === "inventory") {
+    return !isDeviceOnBoard(entry);
+  }
+  return true;
 }
 
 function buildDeviceSearchText(entry) {
@@ -2090,34 +2178,72 @@ function renderDeviceList() {
     .map((device) => {
       const connectionCount = countDeviceConnections(device.id);
       const isSelected = device.id === state.selectedDeviceId;
+      const onBoard = isDeviceOnBoard(device);
       const issueCount = getDeviceDiagnosticCount(device.id);
       const subtitle = [
         getDeviceTypeLabel(device.type),
         device.manufacturer,
         device.tags?.length ? `#${device.tags.slice(0, 2).join(" #")}` : "",
         `${device.ports.length} ports`,
-        isDeviceOnBoard(device) ? "sur le tableau" : "hors tableau",
+        onBoard ? "sur le tableau" : "hors tableau",
         `${connectionCount} liaisons${issueCount ? ` · ${issueCount} alerte${issueCount > 1 ? "s" : ""}` : ""}`
       ]
         .filter(Boolean)
         .join(" · ");
 
       return `
-        <button
-          class="device-list__item ${isSelected ? "is-selected" : ""}"
-          type="button"
-          data-action="select-device"
-          data-device-id="${device.id}"
+        <div
+          class="device-list__item device-list__item--inventory ${isSelected ? "is-selected" : ""} ${onBoard ? "is-on-board" : "is-off-board"}"
           data-help-key="device-list"
         >
-          ${renderDeviceTypeIcon(device.type, device.color, {
-            className: "device-type-icon device-type-icon--list"
-          })}
-          <span class="device-list__copy">
-            <strong>${escapeHtml(device.name)}</strong>
-            <span>${escapeHtml(subtitle)}</span>
-          </span>
-        </button>
+          <button
+            class="device-list__select"
+            type="button"
+            data-action="select-device"
+            data-device-id="${device.id}"
+          >
+            ${renderDeviceTypeIcon(device.type, device.color, {
+              className: "device-type-icon device-type-icon--list"
+            })}
+            <span class="device-list__copy">
+              <strong>${escapeHtml(device.name)}</strong>
+              <span>${escapeHtml(subtitle)}</span>
+            </span>
+          </button>
+          <div class="toolbar-inline device-list__toolbar">
+            ${
+              onBoard
+                ? `
+                  <button
+                    class="action-button action-button--soft action-button--compact"
+                    type="button"
+                    data-action="focus-device-on-board"
+                    data-device-id="${device.id}"
+                  >
+                    Cadrer
+                  </button>
+                  <button
+                    class="action-button action-button--soft action-button--compact"
+                    type="button"
+                    data-action="remove-device-from-board"
+                    data-device-id="${device.id}"
+                  >
+                    Retirer
+                  </button>
+                `
+                : `
+                  <button
+                    class="action-button action-button--soft action-button--compact"
+                    type="button"
+                    data-action="place-device-on-board"
+                    data-device-id="${device.id}"
+                  >
+                    Ajouter
+                  </button>
+                `
+            }
+          </div>
+        </div>
       `;
     })
     .join("");
@@ -2177,7 +2303,7 @@ function renderLibrary() {
               data-action="use-library-device"
               data-library-id="${entry.id}"
             >
-              Utiliser
+              Ajouter au patch
             </button>
             <button
               class="action-button action-button--danger"
@@ -2297,6 +2423,7 @@ function renderBoard() {
   elements.board.style.width = `${state.boardSize.width}px`;
   elements.board.style.height = `${state.boardSize.height}px`;
   elements.emptyState.hidden = boardDevices.length > 0;
+  renderEmptyState();
 
   if (state.workspaceView === "graph") {
     elements.connectionsLayer.hidden = true;
@@ -2400,6 +2527,30 @@ function renderBoard() {
       `;
     })
     .join("");
+}
+
+function renderEmptyState() {
+  const totalDevices = state.schema.devices.length;
+  const boardDevices = getBoardDevices().length;
+
+  if (!elements.emptyStateTitle || !elements.emptyStateCopy || !elements.emptyAddDeviceBtn) {
+    return;
+  }
+
+  if (totalDevices > 0 && boardDevices === 0) {
+    elements.emptyStateTitle.textContent = "Réactive ton patch";
+    elements.emptyStateCopy.textContent =
+      "Des appareils sont déjà disponibles dans l'inventaire. Sélectionne-en un puis ajoute-le au tableau pour reconstruire le patch.";
+    elements.emptyAddDeviceBtn.textContent = "Ouvrir l'inventaire";
+    elements.emptyAddDeviceBtn.dataset.helpKey = "device-list";
+    return;
+  }
+
+  elements.emptyStateTitle.textContent = "Ajoute un appareil au patch";
+  elements.emptyStateCopy.textContent =
+    "Crée une machine dans l'inventaire, ou sélectionne-en une existante pour l'ajouter au tableau central avant de câbler le patch.";
+  elements.emptyAddDeviceBtn.textContent = "Créer un appareil";
+  elements.emptyAddDeviceBtn.dataset.helpKey = "device-form";
 }
 
 function renderBoardPort(device, port, options = {}) {
@@ -3477,7 +3628,7 @@ function mergeDeviceLibraryEntries(existingEntries, importedEntries) {
 
 function getLibraryEntryIdentity(entry) {
   return [entry?.name, entry?.type, entry?.manufacturer, entry?.model]
-    .map((value) => cleanText(value).toLowerCase())
+    .map((value) => normalizeSearchQuery(value))
     .join("::");
 }
 
@@ -3919,6 +4070,27 @@ function focusDeviceInActiveView(deviceId, animate = true) {
     return;
   }
   focusDeviceOnBoard(deviceId, animate);
+}
+
+function focusDeviceFromInventory(deviceId) {
+  const device = getDevice(deviceId);
+  if (!device) {
+    return;
+  }
+
+  selectDevice(deviceId);
+  if (!isDeviceOnBoard(device)) {
+    render();
+    return;
+  }
+
+  if (state.workspaceView !== "board") {
+    setWorkspaceView("board");
+    return;
+  }
+
+  render();
+  focusDeviceOnBoard(deviceId);
 }
 
 function getSchemaBounds() {
@@ -4632,6 +4804,29 @@ function removeDeviceFromBoard(deviceId) {
   centerBoard();
 }
 
+function restoreInventoryToBoard() {
+  const offBoardDevices = state.schema.devices.filter((device) => !isDeviceOnBoard(device));
+  if (!offBoardDevices.length) {
+    showToast("Tous les appareils sont déjà sur le tableau.");
+    return;
+  }
+
+  recordHistory();
+  const startIndex = getBoardDevices().length;
+  offBoardDevices.forEach((device, index) => {
+    device.position = getDeviceGridPosition(startIndex + index);
+    device.onBoard = true;
+  });
+  state.selectedDeviceId = offBoardDevices[0].id;
+  state.selectedPortId = null;
+  state.selectedConnectionId = null;
+  state.helpKey = "device-list";
+  persistSchema(
+    `${offBoardDevices.length} appareil${offBoardDevices.length > 1 ? "s" : ""} remis sur le tableau.`
+  );
+  setWorkspaceView("board");
+}
+
 function createEmptySchema() {
   const now = new Date().toISOString();
   return {
@@ -5297,7 +5492,7 @@ function normalizeTags(value) {
     .filter(Boolean)
     .map((entry) => entry.replace(/^#+/, ""))
     .filter((entry) => {
-      const normalized = entry.toLowerCase();
+      const normalized = normalizeSearchQuery(entry);
       if (seen.has(normalized)) {
         return false;
       }
@@ -5380,6 +5575,15 @@ function renderDeviceTypeFilterOptionsMarkup(selectedValue) {
         </option>
       `
     )
+  ].join("");
+}
+
+function renderInventoryPlacementFilterOptionsMarkup(selectedValue) {
+  const normalized = ["all", "board", "inventory"].includes(selectedValue) ? selectedValue : "all";
+  return [
+    `<option value="all" ${normalized === "all" ? "selected" : ""}>Tous</option>`,
+    `<option value="board" ${normalized === "board" ? "selected" : ""}>Sur le tableau</option>`,
+    `<option value="inventory" ${normalized === "inventory" ? "selected" : ""}>Hors tableau</option>`
   ].join("");
 }
 
